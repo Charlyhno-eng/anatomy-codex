@@ -9,8 +9,7 @@ It helps developers and writers explain how a system works.
 Physical objects and mechanisms make abstract concepts easier to follow.
 The web interface lets you explore eight working examples.
 Each scene is available in light and dark themes.
-You can interact with a scene and export its motion as a looping GIF.
-Exports are optimized locally to stay below 3 MiB.
+The gallery opens in dark mode with a minimal scene viewer.
 The Codex skill helps you create illustrations for your own projects.
 This is a fork of [Anatomy](https://github.com/wheresryan22/anatomy) by [Ryan](https://github.com/wheresryan22).
 The fork is maintained by [Charlyhno-eng](https://github.com/Charlyhno-eng).
@@ -27,7 +26,7 @@ The fork is maintained by [Charlyhno-eng](https://github.com/Charlyhno-eng).
 
 ### Install
 
-Requires Node.js 22.20+ and npm. GIF export also requires FFmpeg and ffprobe on your PATH, and desktop Chrome or Edge.
+Requires Node.js 22.20+ and npm.
 
 ```bash
 git clone https://github.com/Charlyhno-eng/anatomy-codex.git
@@ -41,7 +40,7 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:5173. To export a GIF, click **Export GIF** and share this Anatomy tab when prompted.
+Open http://localhost:5173. Choose a scene and interact with the illustration.
 
 To install the skill in Codex:
 

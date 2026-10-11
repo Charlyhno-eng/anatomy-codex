@@ -2,12 +2,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { Readable } from "node:stream";
 import { EventEmitter } from "node:events";
-import { mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { createPreviewHandler } from "../scripts/preview-server.js";
-import { runProcess } from "../scripts/gif.js";
 
 async function request(url: string, method = "GET", headers: Record<string, string> = {}, body = Buffer.alloc(0), root = resolve("dist")) {
   const input = Readable.from(body.length ? [body] : []) as IncomingMessage;
@@ -32,34 +31,13 @@ test("HEAD, missing files, invalid methods and malformed URLs are handled", asyn
   assert.equal((await request("/", "PUT")).status, 405);
   assert.equal((await request("/%ZZ")).status, 400);
 });
-test("blocks cross-origin exports, invalid hosts and invalid uploads", async () => {
-  assert.equal((await request("/api/gif", "POST")).status, 403);
-  assert.equal((await request("/api/gif", "POST", { origin: "https://other.example" })).status, 403);
+test("blocks cross-origin requests and invalid hosts", async () => {
+  assert.equal((await request("/", "GET", { origin: "https://other.example" })).status, 403);
   assert.equal((await request("/", "GET", { host: "other.example" })).status, 403);
-  const origin = "http://localhost:5173";
-  assert.equal((await request("/api/gif", "POST", { origin, "content-type": "text/plain" })).status, 415);
-  assert.equal((await request("/api/gif", "POST", { origin, "content-type": "video/webm", "content-length": "999999999" })).status, 413);
-  assert.equal((await request("/api/gif", "POST", { origin, "content-type": "video/webm" })).status, 413);
 });
-test("rejects corrupt recordings with an actionable response", async () => {
-  const result = await request("/api/gif", "POST", { origin: "http://localhost:5173", "content-type": "video/webm" }, Buffer.from("not video"));
-  assert.equal(result.status, 422); assert.match(JSON.parse(result.body.toString()).error, /processed/);
-});
-test("the export endpoint returns a real GIF with its quality and size headers", async () => {
-  const folder = await mkdtemp(join(tmpdir(), "anatomy-endpoint-test-"));
-  try {
-    const file = join(folder, "video.webm");
-    await runProcess("ffmpeg", ["-v", "error", "-y", "-f", "lavfi", "-i", "testsrc2=s=320x240:r=20:d=1", "-c:v", "libvpx-vp9", "-threads", "1", file]);
-    const result = await request("/api/gif", "POST", { origin: "http://localhost:5173", "content-type": "video/webm" }, await readFile(file));
-    assert.equal(result.status, 200);
-    assert.equal(result.headers["Content-Type"], "image/gif");
-    assert.equal(result.headers["X-Gif-Width"], 320);
-    assert.equal(result.headers["X-Gif-Height"], 240);
-    assert.equal(result.headers["Content-Length"], result.body.length);
-    assert.equal(result.body.subarray(0, 6).toString(), "GIF89a");
-    await writeFile(join(folder, "result.gif"), result.body);
-    await runProcess("ffmpeg", ["-v", "error", "-i", join(folder, "result.gif"), "-f", "null", "-"]);
-  } finally { await rm(folder, { recursive: true, force: true }); }
+test("GIF export routes are unavailable", async () => {
+  assert.equal((await request("/api/gif/status")).status, 404);
+  assert.equal((await request("/api/gif", "POST", { origin: "http://localhost:5173" })).status, 405);
 });
 test("does not serve paths or symlinks outside the output directory", async () => {
   const folder = await mkdtemp(join(tmpdir(), "anatomy-server-test-"));

@@ -1,15 +1,13 @@
 import assert from "node:assert/strict";
-import { spawn, spawnSync } from "node:child_process";
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { chromePath, chromePort } from "../scripts/chrome.js";
 import { createPreviewServer } from "../scripts/preview-server.js";
-import { ffmpegAvailable, runProcess } from "../scripts/gif.js";
 
 const binary = chromePath();
 assert.ok(binary, "Install Chrome or set CHROME_PATH to run browser tests.");
-assert.equal(await ffmpegAvailable(), true, "FFmpeg and ffprobe are required.");
 const directory = await mkdtemp(join(tmpdir(), "anatomy-browser-test-"));
 const server = createPreviewServer(resolve("dist"));
 let chrome: ReturnType<typeof spawn> | undefined;
@@ -21,8 +19,7 @@ try {
   assert.ok(address && typeof address === "object");
   chrome = spawn(binary, ["--headless=new", "--remote-debugging-port=0", `--user-data-dir=${join(directory, "profile")}`,
     "--no-first-run", "--disable-dev-shm-usage", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist",
-    "--autoplay-policy=no-user-gesture-required", "--allow-http-screen-capture", "--enable-usermedia-screen-capturing",
-    "--auto-select-tab-capture-source-by-title=Anatomy for Codex", "--auto-accept-this-tab-capture", "--window-size=1440,1200", "about:blank"]);
+    "--autoplay-policy=no-user-gesture-required", "--window-size=1440,1200", "about:blank"]);
   const port = await chromePort(chrome, join(directory, "profile"));
   const target = await (await fetch(`http://127.0.0.1:${port}/json/new?about:blank`, { method: "PUT" })).json();
   socket = new WebSocket(target.webSocketDebuggerUrl);
@@ -55,41 +52,34 @@ try {
   };
   await send("Runtime.enable"); await send("Page.enable");
   await send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 1200, deviceScaleFactor: 1, mobile: false });
-  await send("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: directory });
   await send("Page.navigate", { url: `http://127.0.0.1:${address.port}` });
-  await waitFor('document.querySelector("#export") && !document.querySelector("#export").disabled');
+  const loaded = 'document.querySelector(".preview")?.getAttribute("aria-busy") === "false" && document.querySelector("#preview").contentDocument?.querySelector(".iso-plate")';
+  await waitFor(loaded);
+  assert.equal(await evaluate('document.querySelector("#theme").value'), "dark");
+  assert.equal(await evaluate('document.querySelector("#preview").contentDocument.body.dataset.theme'), "dark");
+  assert.equal(await evaluate('getComputedStyle(document.documentElement).colorScheme'), "dark");
+  assert.equal(await evaluate('document.querySelector("#export")'), null);
   for (const name of ["dial-indicator", "desk-computer", "arcade-cabinet", "ripple-tank", "raptor-engine", "turning-dial", "test-rig", "spot-plate"]) {
-    for (const theme of ["light", "dark"]) {
-      await evaluate(`document.querySelector('#scene').value=${JSON.stringify(name)};document.querySelector('#theme').value=${JSON.stringify(theme)};document.querySelector('#duration').value='2';document.querySelector('#scene').dispatchEvent(new Event('change'))`);
-      await waitFor('!document.querySelector("#export").disabled');
-      await evaluate(`(()=>{const p=document.querySelector('#preview').contentDocument.querySelector('.iso-plate');const marker=document.createElement('div');marker.id='capture-test-marker';marker.style.cssText='position:absolute;left:0;top:0;width:48px;height:48px;background:#ff0000;z-index:100';p.append(marker)})()`);
-      await evaluate(`document.querySelector('#export').click()`, true);
-      await waitFor(`document.querySelector('#status').textContent.startsWith('Recording')`);
-      await new Promise(done => setTimeout(done, 600));
-      await evaluate(`document.querySelector('#preview').contentDocument.querySelector('#capture-test-marker').style.background='#0000ff'`);
-      await waitFor(`!document.querySelector('#download').hidden`, 90000);
-      const bytes = await evaluate(`(async()=>Array.from(new Uint8Array(await (await fetch(document.querySelector('#download').href)).arrayBuffer())))()`);
-      const gif = Buffer.from(bytes);
-      assert.ok(gif.length > 1000 && gif.length <= 3 * 1024 * 1024, `${name} ${theme}: invalid GIF size`);
-      const file = join(directory, `${name}-${theme}.gif`); await writeFile(file, gif);
-      const info = JSON.parse(await runProcess("ffprobe", ["-v", "error", "-count_frames", "-show_entries", "stream=nb_read_frames,width,height:format=duration", "-of", "json", file]));
-      assert.ok(Number(info.streams[0].nb_read_frames) >= 20, "Animated frames must be present.");
-      assert.ok(Number(info.format.duration) >= 1.8 && Number(info.format.duration) <= 2.4, "Recorded timing must be preserved.");
-      const pixels = spawnSync("ffmpeg", ["-v", "error", "-i", file, "-vf", "crop=1:1:10:10,format=rgb24", "-f", "rawvideo", "-"], { maxBuffer: 1024 * 1024 });
-      assert.equal(pixels.status, 0, pixels.stderr.toString());
-      assert.ok(pixels.stdout[0] > 200 && pixels.stdout[2] < 50, "The first frame should show the red live marker.");
-      assert.ok(pixels.stdout.at(-1) > 200 && pixels.stdout.at(-3) < 50, "The last frame should show the blue live marker.");
-      console.log(`${name} ${theme}: ${gif.length} bytes, ${info.streams[0].nb_read_frames} frames, real tab capture passed.`);
-      await waitFor('!document.querySelector("#export").disabled');
+    for (const theme of ["dark", "light"]) {
+      await evaluate(`document.querySelector('#scene').value=${JSON.stringify(name)};document.querySelector('#theme').value=${JSON.stringify(theme)};document.querySelector('#scene').dispatchEvent(new Event('change'))`);
+      await waitFor(loaded);
+      assert.equal(await evaluate('document.querySelector("#preview").contentDocument.body.dataset.theme'), theme);
+      assert.equal(await evaluate('document.querySelector("#open").href === document.querySelector("#preview").src'), true);
+      assert.equal(await evaluate('document.querySelector("#status").textContent'), "");
+      assert.equal(await evaluate('getComputedStyle(document.documentElement).colorScheme'), "dark");
+      assert.equal(await evaluate(`(()=>{const f=document.querySelector('#preview');const d=f.contentDocument;return d.documentElement.scrollHeight <= f.clientHeight + 2})()`), true, `${name} ${theme}: scene must not be clipped`);
+      console.log(`${name} ${theme}: scene loaded.`);
     }
   }
-  await evaluate(`document.querySelector('#export').click()`, true);
-  await waitFor(`document.querySelector('#status').textContent.startsWith('Recording')`);
-  await evaluate(`document.querySelector('#cancel').click()`);
-  await waitFor(`document.querySelector('#status').textContent==='Export cancelled.'`);
-  assert.equal(await evaluate(`document.querySelector('#download').hidden`), true);
+  for (const width of [390, 1440]) {
+    await send("Emulation.setDeviceMetricsOverride", { width, height: 1200, deviceScaleFactor: 1, mobile: false });
+    await evaluate(`document.querySelector('#theme').value='dark';document.querySelector('#scene').dispatchEvent(new Event('change'))`);
+    await waitFor(loaded);
+    assert.equal(await evaluate('document.documentElement.scrollWidth <= innerWidth'), true, "The gallery must fit the viewport.");
+    assert.equal(await evaluate(`(()=>{const f=document.querySelector('#preview');return f.contentDocument.documentElement.scrollHeight <= f.clientHeight + 2})()`), true);
+  }
   assert.deepEqual(errors, [], "All scenes must run without console errors or uncaught exceptions.");
-  console.log("All 16 scene/theme exports and cancellation passed.");
+  console.log("All 16 scene/theme views and responsive checks passed.");
 } finally {
   socket?.close(); chrome?.kill("SIGKILL");
   if (chrome?.exitCode === null) await new Promise(done => { chrome.once("exit", done); setTimeout(done, 2000); });

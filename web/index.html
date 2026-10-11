@@ -3,32 +3,36 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
   <title>Anatomy for Codex</title>
   <link rel="stylesheet" href="web/app.css">
   <script src="web/app.js" defer></script>
 </head>
 <body>
   <main>
-    <header><h1>Anatomy for Codex</h1><p>Explore a scene, interact with it, and export a short GIF.</p></header>
-    <section class="controls" aria-label="Scene settings">
-      <label>Scene <select id="scene">
-        <option value="dial-indicator">Dial indicator</option><option value="desk-computer">Desk computer</option>
-        <option value="arcade-cabinet">Arcade cabinet</option><option value="ripple-tank">Ripple tank</option>
-        <option value="raptor-engine">Raptor engine</option><option value="turning-dial">Turning dial</option>
-        <option value="test-rig">Test rig</option><option value="spot-plate">Spot plate</option>
-      </select></label>
-      <label>Theme <select id="theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
-      <a id="open" href="examples/dial-indicator/dial-indicator-light.html" target="_blank" rel="noopener">Open scene ↗</a>
+    <header class="masthead">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="m16 3 12 7v12l-12 7-12-7V10L16 3Z"/><path d="m4 10 12 7 12-7M16 17v12M10 6.5l12 7v12"/></svg>
+        <h1>Anatomy <span>for Codex</span></h1>
+      </div>
+      <span class="collection">Interactive collection</span>
+    </header>
+    <section class="viewer" aria-label="Scene viewer">
+      <div class="toolbar">
+        <label class="scene-control"><span class="sr-only">Scene</span><select id="scene">
+          <option value="dial-indicator">Dial indicator</option><option value="desk-computer">Desk computer</option>
+          <option value="arcade-cabinet">Arcade cabinet</option><option value="ripple-tank">Ripple tank</option>
+          <option value="raptor-engine">Raptor engine</option><option value="turning-dial">Turning dial</option>
+          <option value="test-rig">Test rig</option><option value="spot-plate">Spot plate</option>
+        </select></label>
+        <div class="viewer-actions">
+          <label><span class="sr-only">Scene theme</span><select id="theme"><option value="dark" selected>Dark</option><option value="light">Light</option></select></label>
+          <a id="open" href="examples/dial-indicator/dial-indicator.html" target="_blank" rel="noopener" aria-label="Open scene in a new tab" title="Open scene in a new tab"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M11 4h5v5M16 4l-8 8M8 4H4v12h12v-4"/></svg></a>
+        </div>
+      </div>
+      <div class="preview" aria-label="Interactive scene" aria-busy="true"><iframe id="preview" title="Interactive Anatomy scene"></iframe></div>
     </section>
-    <section class="preview" aria-label="Interactive scene"><iframe id="preview" title="Interactive Anatomy scene"></iframe></section>
-    <section class="controls" aria-label="GIF export">
-      <label>Duration <select id="duration"><option value="2">2 seconds</option><option value="4" selected>4 seconds</option><option value="6">6 seconds</option><option value="8">8 seconds</option></select></label>
-      <button id="export" disabled>Export GIF</button><button id="cancel" hidden>Cancel</button>
-      <a id="download" hidden>Download GIF</a>
-    </section>
-    <p class="note">For GIF export, use desktop Chrome or Edge and share this tab when prompted. Keep the whole figure visible; press Escape to cancel. Only the figure is recorded. GIFs loop and stay below 3 MiB; shorter clips retain more detail.</p>
-    <progress id="progress" hidden aria-label="Export progress"></progress>
-    <output id="status" role="status" aria-live="polite">Loading…</output>
+    <output id="status" role="status" aria-live="polite">Loading scene…</output>
   </main>
 </body>
 </html>

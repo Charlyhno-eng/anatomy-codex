@@ -20,7 +20,7 @@ npm ci
 npm run build
 ```
 
-`npm run build` compiles the kit, scripts and examples, prepares the committed standalone previews, and bundles both React examples. Use `npm run build:examples -- dial-indicator` to regenerate a standalone example; omit the name to regenerate all six. Dense examples may take several minutes. `npm run dev` builds and serves the gallery at http://localhost:5173. The web interface exports the current scene as a GIF using desktop Chrome/Edge tab capture and local FFmpeg encoding.
+`npm run build` compiles the kit, scripts and examples, prepares the committed standalone previews, and bundles both React examples. Use `npm run build:examples -- dial-indicator` to regenerate a standalone example; omit the name to regenerate all six. Dense examples may take several minutes. `npm run dev` builds and serves the gallery at http://localhost:5173. The gallery uses a minimal dark interface and opens scenes in dark mode by default.
 
 This skill uses Codex's normal shell and image inspection capabilities. It needs no model SDK, API key, hook, MCP server or external agent CLI. Chrome/Chromium is needed only for browser captures and checks; set `CHROME_PATH` if discovery fails. Respect the user's scope and the environment's execution permissions.
 
