@@ -24,7 +24,7 @@ A figure is alive when its mechanism moves the way the real thing would: a carri
 - The `<svg>` carries `role="img"` and an `aria-label` describing the object and what it shows.
 
 ## Vanilla loop (framework-free)
-```js
+```ts
 let frame = 0, last = 0, visible = false, touring = !still.matches, clock = 0;
 function tick(now) {
   const dt = last ? Math.min((now - last) / 1000, 1 / 30) : 1 / 60;
@@ -40,7 +40,7 @@ function tick(now) {
 const run = () => { if (!frame && visible) { last = 0; frame = requestAnimationFrame(tick); } };
 new IntersectionObserver((entries) => { visible = entries[entries.length - 1].isIntersecting; if (visible) run(); }, { rootMargin: "120px 0px" }).observe(stage);
 ```
-`examples/dial-indicator/build.mjs` contains a complete version, with the tour, pointer mapping and keyboard stops.
+`examples/dial-indicator/build.ts` contains a complete version, with the tour, pointer mapping and keyboard stops.
 
 ## React loop
 Keep static art in props built on the server and move only `<g>` wrappers and the paths that change shape:
@@ -82,9 +82,9 @@ When a part changes shape rather than position (a swelling capsule, a compressin
 - **A rod that slides out of a gland** doesn't change shape: it is one full-length rod that moves, clipped at the gland face by a clip that stays put (`G.rodOut`, `holdStill`, `craft.md`, section 3). Never draw it as several overlapping copies.
 
 ## Envelopes for one-shot events
-A flash, a click, a pop, a shake or a shock is an event with an age, not a value you set. Drive it with an envelope that has an attack and a decay. `kit/gl.mjs` exports `smooth(a, b, x)` (smoothstep) and `burst(age, rise, fall)`, which is `smooth(0, rise, age)` times `exp(−(age − rise)/fall)` after the peak and 0 before the event:
-```js
-import { smooth, burst, settle } from "../../kit/gl.mjs";
+A flash, a click, a pop, a shake or a shock is an event with an age, not a value you set. Drive it with an envelope that has an attack and a decay. `kit/gl.ts` exports `smooth(a, b, x)` (smoothstep) and `burst(age, rise, fall)`, which is `smooth(0, rise, age)` times `exp(−(age − rise)/fall)` after the peak and 0 before the event:
+```ts
+import { smooth, burst, settle } from "../../kit/gl.js";
 const flash = calm ? 0 : burst(clock - mainAt, 0.08, 0.13);
 ```
 On a standalone page `glScript()` already inlines all three, so use them directly and don't declare your own: a second `const smooth` in the same module script is a SyntaxError.
@@ -95,7 +95,7 @@ On a standalone page `glScript()` already inlines all three, so use them directl
 
 ## Critically damped settle
 For a value that should arrive without overshoot (a hue, a brightness, a lamp, a reach, a frequency), use the kit's `settle(state, target, dt, seconds, calm)`: a critically damped spring on `state = { x, v }` with time constant `seconds`, `v += (w²·(target − x) − 2w·v)·dt` with `w = 1/seconds`, in four sub-steps. It is smoother than exponential follow, because velocity is continuous too. It snaps to the target once error and velocity are both below 1e-4, jumps there under `calm`, and returns true while still moving, so it can keep the loop alive:
-```js
+```ts
 const moving = settle(freq, state.tf, dt, 0.625, calm);
 ```
 The ripple tank runs its frequency (0.625 s) and dipper spacing (0.4 s) through `settle`, so a key press or a pointer move never jumps the wavelength.

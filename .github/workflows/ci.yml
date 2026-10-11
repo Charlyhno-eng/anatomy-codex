@@ -23,42 +23,74 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Typecheck sources
+        run: npm run typecheck
+
+      - name: Compile and prepare gallery
+        run: npm run build
+
+      - name: Install GIF encoder
+        run: brew install ffmpeg
+
+      - name: Test GIF quality, size and failure handling
+        run: npm test
 
       - name: Dial indicator
         run: |
-          node examples/dial-indicator/build.mjs
-          node examples/dial-indicator/build.mjs --light
+          node dist/examples/dial-indicator/build.js
+          node dist/examples/dial-indicator/build.js --light
 
       - name: Desk computer
         run: |
-          node examples/desk-computer/build.mjs
-          node examples/desk-computer/build.mjs --light
+          node dist/examples/desk-computer/build.js
+          node dist/examples/desk-computer/build.js --light
 
       - name: Arcade cabinet
         run: |
-          node examples/arcade-cabinet/build.mjs
-          node examples/arcade-cabinet/build.mjs --light
+          node dist/examples/arcade-cabinet/build.js
+          node dist/examples/arcade-cabinet/build.js --light
 
       - name: Ripple tank
         run: |
-          node examples/ripple-tank/build.mjs
-          node examples/ripple-tank/build.mjs --light
+          node dist/examples/ripple-tank/build.js
+          node dist/examples/ripple-tank/build.js --light
 
       - name: Turning dial
         run: |
-          node examples/turning-dial/build.mjs
-          node examples/turning-dial/build.mjs --light
-          node examples/turning-dial/build.mjs --light --verify
-          node examples/turning-dial/stress.mjs --light
+          node dist/examples/turning-dial/build.js
+          node dist/examples/turning-dial/build.js --light
+          node dist/examples/turning-dial/build.js --light --verify
+          node dist/examples/turning-dial/stress.js --light
 
       - name: Raptor engine
         run: |
-          node examples/raptor-engine/build.mjs
-          node examples/raptor-engine/build.mjs --light
+          node dist/examples/raptor-engine/build.js
+          node dist/examples/raptor-engine/build.js --light
 
-      - name: Committed pages are unchanged
+      - name: Sources and reference pages are unchanged
         run: |
           git status --short
           git diff --stat --exit-code
           test -z "$(git status --porcelain)"
+
+  browser:
+    name: Export GIFs from every scene and theme
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm run test:browser
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

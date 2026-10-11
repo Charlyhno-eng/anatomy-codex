@@ -38,10 +38,10 @@ Reviewers rejected each of these, so don't do them:
 - **Text in the drawing.** Allow at most one tiny engraved label (`FaceText` on a face). Everything else goes in the card corners, legend or caption.
 - **Copying a reference.** Take mood and finish from a reference, then invent the object.
 - **Raw pointer jumps.** Parts that snap to the cursor. Ease everything.
-- **Pipes through pipes.** On the first Raptor the owner zoomed in and found cables and lines passing through the main ducts and through each other, "which makes no sense". At 1× it looked fine. Every pipe and cable keeps clear of everything but its own connection, every crossing is drawn in true depth order, and `kit/audit.mjs` proves both (section 8, "Clearance and crossings").
+- **Pipes through pipes.** On the first Raptor the owner zoomed in and found cables and lines passing through the main ducts and through each other, "which makes no sense". At 1× it looked fine. Every pipe and cable keeps clear of everything but its own connection, every crossing is drawn in true depth order, and `kit/audit.ts` proves both (section 8, "Clearance and crossings").
 - **Textures that stop.** On the same close-up, rows of bolt dots on the chamber stopped dead in the middle of the surface, and the bell and throat were shaded as a staircase of flat tone blocks. Both read as broken. The owner's words: if a texture has to end, "we'd rather fade them out at the end than an instant stop". Shade curved surfaces smoothly, and make a texture end on a real edge or fade out (section 8, "Shading and textures on curved surfaces").
 - **Shaders that pop or are cut.** The first Raptor plume changed colour instantly between its phases, "as if cut out", and a glow ended in a straight line at the canvas edge. Every shader term rides an envelope and reaches zero before any bound (`webgl.md`, section 7).
-- **Textures that stop, on flat faces too.** The same fault came back on a later figure's boxes, where no curved-surface rule reached it: a tank's weld seam inset 6 units from each rounded corner, a manifold face line inset 4, a row of faint ticks floating on a bare bedplate with no ruler under them, cooling ribs that stopped 2 units short of the seam arcs at both ends, and a hose braid drawn as a dashed stroke down the centreline that ended in two straight hard edges along the hose and broke at every chunk joint. A seam on a box runs edge to edge round the visible corners (`k.sideSeam`), ribs end on seams at the same `s` (`ribsOf(…, { seams: true })`), ticks hang from a ruler strip's edge, and a texture on a pipe comes from `tubePieces(…, { rings })`. `node scripts/lines.mjs page.html` fails every line end that touches nothing (`verify.md`, "Line ends").
+- **Textures that stop, on flat faces too.** The same fault came back on a later figure's boxes, where no curved-surface rule reached it: a tank's weld seam inset 6 units from each rounded corner, a manifold face line inset 4, a row of faint ticks floating on a bare bedplate with no ruler under them, cooling ribs that stopped 2 units short of the seam arcs at both ends, and a hose braid drawn as a dashed stroke down the centreline that ended in two straight hard edges along the hose and broke at every chunk joint. A seam on a box runs edge to edge round the visible corners (`k.sideSeam`), ribs end on seams at the same `s` (`ribsOf(…, { seams: true })`), ticks hang from a ruler strip's edge, and a texture on a pipe comes from `tubePieces(…, { rings })`. `node dist/scripts/lines.js page.html` fails every line end that touches nothing (`verify.md`, "Line ends").
 - **Stand-in shapes.** To quiet the audit a builder recorded a 0.45-thick disc at the tip of each of five overlapping rod copies, and a sliver for a second rod that was drawn sunk into its cylinder head. The audit passed and said nothing about either rod, and the lit rod's outline was notched every 12 units while it moved. Record the true shape of what you draw; the audit's stand-in check fails an item whose recorded shapes cover less than 60% of its drawing. A rod that slides out of a gland is one rod (section 3, "Rod out of a gland").
 - **Dark-theme glows pasted on white.** The owner made light the shipping theme for every site figure, and seven shader figures built on a dark plate had to be converted. Taking a dark glow and darkening it gave "red ink smoke" (the Raptor's light plume). It also gave flames drawn as outlines, sparks that looked like dirt, salmon-coloured cooling glass, grey fades and cavities that got heavier as the fire went out. On paper, light reads through saturation and a darker physical ground (section 7, and `webgl.md`, section 8).
 - **Fixing one close-up by eye.** Tuning a painter's key or nudging a waypoint until one screenshot looks right breaks another frame or another theme. The Raptor's hand-set keys looked right at 1× and had 323 depth-order problems. Measure (section 8, "Clearance and crossings"), then look.
@@ -51,7 +51,7 @@ Reviewers rejected each of these, so don't do them:
 `P` is the projection and `k` is the kit, as in `import * as k from "./iso-kit"`. Heights are in world units, with z up. Draw each recipe's solids in the order listed.
 
 ### Base plate on feet
-```js
+```ts
 const PLATE = { x: -128, y: -64, w: 262, d: 128, r: 8 };
 halo:  `<path class="iso-halo" d="${k.haloOf(PLATE, -17, 12, P)}"/>`
 feet:  for (const [x, y] of byDepth(k.corners(PLATE, 22))) {
@@ -65,7 +65,7 @@ screws: k.corners(PLATE, 10) → k.ring(x, y, 2.2, 0, P, 16) (line lo) + dots si
 Sort feet with `byDepth = (pts) => [...pts].sort((a, b) => k.depthOf([a[0], a[1], 0], P) - k.depthOf([b[0], b[1], 0], P))`.
 
 ### Ruler strip and label plate
-```js
+```ts
 const strip = { x: -110, y: PLATE.y + PLATE.d - 15, w: 230, d: 7, r: 1 };
 k.slabOf(strip, 0, 0.6, P, 3)                                   // tone lo, crease none
 const t = k.topTicks(strip.x + 4, strip.x + strip.w - 4, 4, 5, strip.y + 0.8, 0.6, [2, 3.6], P);
@@ -76,7 +76,7 @@ label plate: k.slabOf(plan, 0, 0.8, P, 4) + k.planOutline(k.insetPlan(plan, 1.6)
 Ticks only live on a ruler strip or a dial face, rooted on its edge: `topTicks` grows each tick from `edge`, so put `edge` on (or within 1 unit of) the strip's edge, and `sideTicks` hangs them from `top`, so pass the face's top edge, not 2 units below it. A row of marks on a bare plate is a texture that floats at both ends. The label plate's rule lines stand for printed text, so they are the one place a line may stop on a bare face: pass `free: true` so the line check knows it was meant.
 
 ### Seams, welds and trim lines on a box
-```js
+```ts
 const seam = k.sideSeam(TANK, 14, P, 6);                         // visible near half of the plan at z = 14, round the corners
 k.solidSvg(k.slabOf(TANK, 6, 98, P, 6, 1.2), { tone: "mid", inner: k.lineSvg(seam, { tone: "faint" }) })
 ```
@@ -84,7 +84,7 @@ A seam, weld bead, band or lid line on a box wraps the visible corners and ends 
 
 ### Rod out of a gland
 A piston rod, a plunger or a slide whose visible length changes as it moves is one rod, built once at full length (visible plus stroke), with the part inside the gland clipped away:
-```js
+```ts
 const ROD = G.rodOut(F, gland, tip, r, P, { stroke });           // F.a points out of the gland
 svg = `<clipPath id="rod"><path data-hold d="${ROD.clip}"/></clipPath><g clip-path="url(#rod)">${k.solidSvg(ROD.paths, { lit: true })}</g>`
 R.put({ ..., move: G.mul3(F.a, stroke), svg, shapes: [R.solid(A.slide(F, gland, tip, r, { name: "rod" }))] })
@@ -93,7 +93,7 @@ live: el.setAttribute("transform", `translate(${dx} ${dy})`); holdStill(el, [dx,
 `rodOut` returns the rod's paths from `gland − stroke` to `tip` and a clip that covers it from the gland face to `tip + stroke`. The clip path carries `data-hold`; whatever moves the item calls `holdStill(el, [dx, dy])` with the same screen offset, which moves the clip the other way, so the gland face stays put while the rod slides through it. The same helper retracts a rod into a gland (a load cylinder) when its item moves the other way. Draw a faint seal ring (`circleOf` at the gland face, radius `r + 0.4`) on the gland. Record it with `A.slide`, which the audit poses by stretching the rod from the gland face instead of translating it, so clearances, depth and solid checks see the true rod in every frame. Never fake the extension with overlapping copies: each copy's lit edge stops where the next one's fill starts, and the outline is notched every few units while it moves.
 
 ### Rails, end stops and a carriage
-```js
+```ts
 rails:  for y of [-20, 15]: k.slabOf({ x: 2, y, w: 122, d: 5, r: 1 }, 0, 3, P, 3, 0.4)   // mid
 stops:  k.slabOf({ x, y: -23, w: 5, d: 46, r: 1.2 }, 0, 7, P, 3, 0.5) + 2 screw dots on top
 carriage (built at x = 0, moved with translateAlong):
@@ -104,7 +104,7 @@ carriage (built at x = 0, moved with translateAlong):
 ```
 
 ### Post, collar, clamp and thumb screw
-```js
+```ts
 k.cylinder(px, py, 5, z0, 4, P, 28)              // collar
 k.cylinder(px, py, 3.2, z0 + 4, h, P, 28)        // post, crease none
 k.sideArc(px, py, 3.2, z, P, 16)                 // faint seam rings on the post
@@ -113,14 +113,14 @@ thumb screw: a 2.8 × 3 neck slab from the clamp face + k.cylinder(r 2.6, h 6) +
 ```
 
 ### Knurled knob with a pointer
-```js
+```ts
 k.cylinder(cx, cy, 6, z, 4, P, 32)                          // mid
 k.knurl(cx, cy, 6, z, z + 4, 36, P)                         // line lo
 k.lineOnTop([cx - 3, cy], [cx + 4.6, cy], z + 4, P)         // pointer, line hi
 ```
 
 ### Coil spring around a rod (split for painter's order)
-```js
+```ts
 const c = k.coil(xFrom, xTo, [rodY, rodZ], 4.2, 6, "x", P);
 c.back  → line lo, drawn BEFORE the rod
 rod     → k.slabOf({ x, y: rodY - 2, w, d: 4, r: 1.8 }, rodZ - 2, 4, P, 3)
@@ -129,7 +129,7 @@ c.front → line mid, drawn AFTER the rod
 Rebuild the coil each frame when it compresses, by changing `xFrom`/`xTo`. It is cheap.
 
 ### Dial gauge (face up)
-```js
+```ts
 k.cylinder(x, y, R, z, 10, P, 64, 0.8)                       // puck, tone hi, crease lo
 k.knurl(x, y, R, top - 3.4, top, 84, P, 0.3)                 // knurled bezel band, lo
 k.sideArc(x, y, R, top - 3.4, P, 40)                         // band seam, faint
@@ -141,7 +141,7 @@ hub: k.ring(x, y, 1.6, top, P, 16)
 ```
 
 ### Drawer with a pull and label holder
-```js
+```ts
 case:   k.slabOf(casePlan, z, h, P, 4, 0.8)
 front:  a thin slab on the near face; pull: two posts plus a bar (small slabs)
 holder: an inset outline on the front with a card slab inside; rivets as 0.45 dots
@@ -150,14 +150,14 @@ open:   translate the drawer along its axis with translateAlong; its box (floor 
 ```
 
 ### Turntable with degree ticks
-```js
+```ts
 k.cylinder(cx, cy, R, z, 4, P, 72, 0.8)
 k.radialTicks(cx, cy, R - 1, 72, 6, z + 4, [1.2, 2.6], P)
 rotate: rebuild only what turns (or the object on top) at the new angle each frame
 ```
 
 ### Perforations, vents and a pulsing dot grid
-```js
+```ts
 k.dotGrid(x, y, cols, rows, gap, zTop, P) → dotsSvg(points, { size: .45, tone: "lo" })
 // add { pulse: true } for a slow pulsing grid on an "active" part
 ```
@@ -191,7 +191,7 @@ A `Solid` with `lit` gets a white edge and a lighter top. Use it for the moving 
 - **Things standing on a stepped surface.** Order the steps so the taller ones are further back. A probe resting on a lower step then can't be hidden by a taller one in front of it.
 - Vertical parts that pass through a horizontal one (a post through a clamp) are drawn in two segments, below and above, around the horizontal part.
 - **A clip cut is an edge.** Where a clip ends one part against another (a cable-chain run entering its loop, a rod at a gland), make the clip's section flush with the joint plane, and draw a stroked edge along the cut that moves with the clip (`data-clip`). On the plasma cutter, a run's clip section reached past the joint. The run's top face and slot bars were drawn 26 units into the loop's hollow and ended on a vertical cut with no stroke, which is a line stopping in mid-air. Re-ordering the painter's keys wouldn't have fixed it: the loop link's end face really is behind the run.
-- **Dense figures settle their keys from geometry.** Past a few dozen overlapping parts, hand-set biases fight each other. Give every item its true shape and let `kit/audit.mjs` measure which surface is nearer wherever two items overlap, then `orderKeys` raises each key just enough to satisfy every pair (`kit.md`, section 12). What it can't satisfy is a pair that interlocks, which needs a split. The first Raptor's hand-set keys left 190 pairs drawn the wrong way round assembled and 133 apart; measured keys took both to zero.
+- **Dense figures settle their keys from geometry.** Past a few dozen overlapping parts, hand-set biases fight each other. Give every item its true shape and let `kit/audit.ts` measure which surface is nearer wherever two items overlap, then `orderKeys` raises each key just enough to satisfy every pair (`kit.md`, section 12). What it can't satisfy is a pair that interlocks, which needs a split. The first Raptor's hand-set keys left 190 pairs drawn the wrong way round assembled and 133 apart; measured keys took both to zero.
 - **Crossings sort per chunk.** A pipe or cable is drawn as `tubePieces` chunks, each its own item at its own depth, so one line can pass in front of one part and behind the next. Where two lines cross on screen, the chunk nearer the camera is drawn later; a crossing can only be ordered if neither chunk also runs behind the other somewhere else, so break long chunks at a crossing (`breaks`).
 
 ## 6. Camera and composition
@@ -218,7 +218,7 @@ A `Solid` with `lit` gets a white edge and a lighter top. Use it for the moving 
 
 ## 8. Round parts and pipes
 
-Engines, pumps, valves, lamps and instruments are mostly turned parts and pipes. `kit/lathe.mjs` and `kit/tube.mjs` build them along any axis (`references/kit.md`, sections 10 and 11). `examples/raptor-engine/build.mjs` has every recipe below in working form.
+Engines, pumps, valves, lamps and instruments are mostly turned parts and pipes. `kit/lathe.ts` and `kit/tube.ts` build them along any axis (`references/kit.md`, sections 10 and 11). `examples/raptor-engine/build.ts` has every recipe below in working form.
 
 ### Turned parts: think in meridians
 Write a part as its half-section: a list of `[s, r]` from one end to the other, and turn it with `G.solidOf(profile, F, P)`.
@@ -274,7 +274,7 @@ Every place two parts meet is either a flat face on a flat face, a tangent conta
 A pipe keeps about 1.5 radii between its centreline and anything but its own connection, so a 0.6 cable passes 0.3 clear of a duct's skin and a duct keeps half its radius off its neighbours. Where two lines must cross on screen, they cross in depth, one well in front of the other, and the chunk keys order them; where a pipe passes through a collar, clamp or valve it is gapped there (`kit.md`, section 11). Prove it rather than eyeballing it:
 1. Record a shape for every item and every tube as you build, into one `A.recorder(P, { order, spring })` (`kit.md`, section 12): `R.put` for drawn items with their `shapes`, `R.solid` for each shape, `R.route` for each pipe and cable. Make the helpers do it, so nothing escapes. There is a recorded shape for everything the kit draws: `A.slab`, `A.extruded` and `A.cylinder` for floor prisms, `A.solid`, `A.lathe` and `A.disc` for turned parts (traced along the same curve the drawing uses), `A.prism` for `prismOf`, `A.ball`, and tubes.
 2. Settle the painter's keys with `A.settle(R, P)` on every build: it measures the overlaps in every state the figure rests in (assembled and apart) and in every frame of its real explode (`explodeStates` replays the live springs and stagger) and runs `orderKeys`.
-3. End the build with `A.auditOrExit(R, P)` and run `node build.mjs --audit` until every failing line prints zero. An interlocked pair is a geometry bug (a split, a gap or a tangent contact fixes it); don't bias it away.
+3. End the build with `A.auditOrExit(R, P)` and run `node dist/build.js --audit` until every failing line prints zero. An interlocked pair is a geometry bug (a split, a gap or a tangent contact fixes it); don't bias it away.
 4. Lines don't double back on screen. A horizontal leg that runs away from the viewer reads as going up, so a pipe that runs away and then drops reads as a cusp, a pipe ending in mid-air. Route the leg sideways on screen first (the audit's `folds` finds every case: a screen turn over 140° within 4 radii while the real turn is under 110°).
 5. No outline folds back on itself, and no bend pinches to a point on screen. A leg that points at the viewer and then turns (a sense line leaving a jacket boss radially and climbing to a block, a pigtail leaving a transducer tip and hooking back) projects its fillet edge-on, and the two legs meet in a V with no visible radius. `folds` measures the screen radius of every visible bend over 90° and fails it when it is under twice the tube's screen radius. Fixes, in order of preference: let the turn happen inside a fitting (a ball tee on the boss, the line leaving it toward its next point: the Raptor's `elbow`, used by sense0, sense2, sense5 and the fuel-rich igniter line); bend in a plane that faces the viewer (the Raptor's pigtails loop in the transducer's own radial plane, which faces the camera; its local helper `sideOn(d) = unit3(cross3(unit3(V − d·(V·d)), d))`, with `V = G.viewOf(P)`, gives the direction across the screen from a leg along `d`, so a bend in the plane of `d` and `sideOn(d)` faces the viewer); move the port to where its normal lies across the screen. A bend in a plane whose normal makes `f = |n·V|` with the view projects to a screen radius of about `R·f²`; once that is under the tube's screen half-width, the inner edge of a single chunk runs backwards and the outline crosses itself in a little knot (the audit's `selfOverlaps`). `fillet(…, { P, tube })` raises each corner's radius to clear that, but only as far as the legs allow, so give a turn next to a port at least `R + 3r` of straight leg. A port that faces the viewer squarely (the Raptor's speed pickup on the methane pump) makes every approach a hairpin: move it.
 6. Crossings happen on straights, clearly. Where one line's bend or end lands on another's outline on screen (touching, or overlapping by any amount), the eye reads a joint or a line threaded through another, whatever the true depth: a pigtail hook that peeks out from behind a sense-line elbow, a flange that lands on another line's band in the apart pose, a cable that runs along a short duct on screen and over its end flange. A fitting counts too: a harness clamp whose outline lands on another line reads as that line growing out of the clamp, as the Raptor's clamp did on the oxygen-to-preburner line apart. The audit's `crowding` lists every visible case, assembled and apart; reroute one line so the meeting is a clear crossing of two straights or a visible gap of at least a pixel (two for a clamp). Excuse a pair only after you have looked at it at 8× (`CROWD_OK`).

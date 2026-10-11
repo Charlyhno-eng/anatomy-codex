@@ -1,6 +1,6 @@
-import { Plate } from "../../kit/react/draw";
-import { StretchArt } from "./art";
-import { readoutOf, PULLED } from "./rig";
+import { Plate } from "../../kit/react/draw.js";
+import { StretchArt } from "./art.js";
+import { readoutOf, PULLED } from "./rig.js";
 import "./stretch.css";
 
 export function TestRigFigure() {

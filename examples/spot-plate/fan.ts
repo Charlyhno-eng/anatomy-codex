@@ -1,5 +1,5 @@
-import { extrude, iso, pathOf, type Plane } from "../../kit/iso-kit";
-import { BLADE_LONG, BLADE_Z, DECK_H, GAPS, LEAD_H, LEAD_LONG, P, PIVOT, ROWS, angleOf, thicknessOf } from "./rig";
+import { extrude, iso, pathOf, type Plane } from "../../kit/iso-kit.js";
+import { BLADE_LONG, BLADE_Z, DECK_H, GAPS, LEAD_H, LEAD_LONG, P, PIVOT, ROWS, angleOf, thicknessOf } from "./rig.js";
 
 const RADIANS = Math.PI / 180;
 const BUTT = 7.2;

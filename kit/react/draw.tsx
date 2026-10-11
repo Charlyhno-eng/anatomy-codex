@@ -1,6 +1,6 @@
 import * as React from "react";
-import { pathOf, type Flat, type KeyMark, type LegendKey, type LineTone, type SolidPaths, type Tone } from "../iso-kit";
-import { Stage } from "./live";
+import { pathOf, type Flat, type KeyMark, type LegendKey, type LineTone, type SolidPaths, type Tone } from "../iso-kit.js";
+import { Stage } from "./live.js";
 
 interface SolidProps {
   paths: SolidPaths;

@@ -1,7 +1,7 @@
 import * as React from "react";
-import { Dots, FaceText, Line, Solid } from "../../kit/react/draw";
-import { BASE_ART, CARRIAGE_ART, DIAL_ART, FINGER_ART, FRAME_ART, PLUNGER_ART, PROBE_ART, RAIL_ART, REST_OUTLINE, RIDER, RODS } from "./geometry";
-import { StretchLive } from "./live";
+import { Dots, FaceText, Line, Solid } from "../../kit/react/draw.js";
+import { BASE_ART, CARRIAGE_ART, DIAL_ART, FINGER_ART, FRAME_ART, PLUNGER_ART, PROBE_ART, RAIL_ART, REST_OUTLINE, RIDER, RODS } from "./geometry.js";
+import { StretchLive } from "./live.js";
 
 const BASE = (
   <g key="base">

@@ -1,6 +1,9 @@
 # WebGL inside the drawing
 
-How to put a shader effect (fire, water, light, glow) inside an isometric figure so it reads as part of the same object, seen through the same camera. Two shipped examples do this: `examples/raptor-engine/` (a plume, shock, splash and steam under a rocket engine) and `examples/ripple-tank/` (caustics, shadows and a rippled water surface). Read their `live.js` next to this page.
+TypeScript convention: compile before executing the builders or tools. Imports use `.js` extensions for emitted ESM. Browser behaviour is authored in `live.ts`; its injected kit symbols and serialized data need `declare const` declarations as shown in the shipped examples. Read the emitted file through `browserScript(join(HERE, "live.js"))` to remove imports, exports and source map comments before inlining it. Never concatenate raw `readFileSync` results for compiled JavaScript.
+
+
+How to put a shader effect (fire, water, light, glow) inside an isometric figure so it reads as part of the same object, seen through the same camera. Two shipped examples do this: `examples/raptor-engine/` (a plume, shock, splash and steam under a rocket engine) and `examples/ripple-tank/` (caustics, shadows and a rippled water surface). Read their `live.ts` next to this page.
 
 The user loved the first shader figure, but noticed that the colour changed instantly between its phases, as if the effect had been cut. So the bar is: **nothing pops, nothing is cut, and everything sits in the drawing's perspective.** Every rule below came from a bug that broke that bar.
 
@@ -25,7 +28,7 @@ Don't use one for:
 - **Decoration.** Shimmer, background gradients, bloom on every edge, or noise added to make the figure look "rich". If you could delete the effect and the explanation still holds, delete it.
 - **Something the SVG already shows well.** A glowing LED is a `lit` dot, not a shader.
 
-The SVG must still read on its own. The Raptor without WebGL still shows the engine, with a rim light and a CSS deck glow. The ripple tank draws its crests and nodal lines as SVG lines (`patternOf` in `model.mjs`), clipped to the drawn outline of the tank's shadow on the paper, and hides them with `.rt-stage[data-gl] .rt-fallback { display: none }` once WebGL is running.
+The SVG must still read on its own. The Raptor without WebGL still shows the engine, with a rim light and a CSS deck glow. The ripple tank draws its crests and nodal lines as SVG lines (`patternOf` in `model.ts`), clipped to the drawn outline of the tank's shadow on the paper, and hides them with `.rt-stage[data-gl] .rt-fallback { display: none }` once WebGL is running.
 
 ## 2. The layer stack
 
@@ -79,7 +82,7 @@ If the front SVG must take hover (the Raptor's parts do), give it `pointer-event
 
 ## 3. The camera contract
 
-`kit/gl.mjs` prepends `GLSL_ISO` to your fragment. It declares the uniforms and functions that make the shader see the same camera as `iso()`:
+`kit/gl.ts` prepends `GLSL_ISO` to your fragment. It declares the uniforms and functions that make the shader see the same camera as `iso()`:
 
 | Name | What it is |
 |---|---|
@@ -132,15 +135,15 @@ Anything that lies on a plane must line up exactly with that plane's SVG lines.
 - **Same plane.** The ripple tank uses `onFloor(vb, uZ.x)` (the paper), `onFloor(vb, uZ.z)` (the water) and `onWallX(vb, uNear.x)` and `onWallY(vb, uNear.y)` (the two near glass walls) for the water band behind the glass. Never use screen offsets.
 - **Seen through an opening, masked twice.** Content behind an opening in a nearer plane (a sight glass, a window, a recess, a gauge face under its bezel) is masked by its own plane (`onWallY(vb, back)`) and by the opening tested in the opening's plane (`onWallY(vb, face)`), the two soft masks multiplied together. Masked only in the back plane, a blind-test sight glass spilled its oil and glass about 0.4 px past the top rim onto the body face, and at the bottom the offset showed a strip of bare body inside the opening. Draw the recess's inner walls in the front SVG, shaded by facing (`craft.md`, section 10), so the offset between the two planes reads as wall, not as bare face.
 - **Only the deviation moves.** If an effect displaces what you see (refraction through ripples), apply only the part that differs from the rest state. The ripple tank computes the sight line bent by the rippled surface and by flat water, and applies only the difference. At rest, the paper under the water lines up with the SVG paper. The shift is also faded to zero wherever the sight line to the paper passes within a few units of a leg (`legClear`), so refracted paper never slides out from behind a leg that the middle SVG draws over it.
-- **Heightfields match the lathe.** The Raptor's `ground(r)` is the deck disc plus the flame-cone profile, with the same radii and heights as the `G.solidOf` profile in `build.mjs`. Flow behind the cone is hidden geometrically, and hard edges appear only where the SVG draws a real silhouette.
+- **Heightfields match the lathe.** The Raptor's `ground(r)` is the deck disc plus the flame-cone profile, with the same radii and heights as the `G.solidOf` profile in `build.ts`. Flow behind the cone is hidden geometrically, and hard edges appear only where the SVG draws a real silhouette.
 
 Check registration at 4× (section 9).
 
 ## 6. API and a minimal page
 
-```js
-import { GLSL_ISO, glCamera, glLayer, smooth, burst, settle } from "../../kit/gl.mjs";
-import { kitScript, glScript } from "../../scripts/inline-kit.mjs";
+```ts
+import { GLSL_ISO, glCamera, glLayer, smooth, burst, settle } from "../../kit/gl.js";
+import { browserScript, kitScript, glScript } from "../../scripts/inline-kit.js";
 ```
 
 | Function | What it does |
@@ -151,7 +154,7 @@ import { kitScript, glScript } from "../../scripts/inline-kit.mjs";
 | `draw(values, time)` | Resizes the canvas to its CSS box × `min(maxRatio, devicePixelRatio)`, sets the camera uniforms, sets `uTime = time`, sets each value in `values` and draws one full-screen triangle. |
 | `clear()` | Clears to transparent, only if something was drawn. |
 | `smooth(a, b, x)`, `burst(age, rise, fall)`, `settle(state, target, dt, seconds, calm)` | The JS envelopes every shader uniform should ride on (section 7 and `motion.md`). `settle` returns true while still moving. |
-| `glScript()` | The source of `kit/gl.mjs` with `export` stripped, for inlining into a standalone page after `kitScript()`. Live code on that page uses `glLayer`, `smooth`, `burst` and `settle` directly and must not declare its own. |
+| `glScript()` | The source of `kit/gl.ts` with `export` stripped, for inlining into a standalone page after `kitScript()`. Live code on that page uses `glLayer`, `smooth`, `burst` and `settle` directly and must not declare its own. |
 
 A uniform value (in `fixed`, `set` or `draw`) can be a number (float), an array of length 2–4 (`vec2`–`vec4`), or an array or `Float32Array` longer than 4, sent with `uniform1fv` to a `uniform float name[N]`: a 24-sample history is one `uH[24]`. There are no ints, matrices or samplers through these calls. For more data than a uniform array holds, use a texture: a `sampler2D` reads unit 0 by default, so create and update it on `layer.gl`. The ripple tank packs a 32 × 2 history into an RGBA8 texture, 16 bits per value (`PACK`, `put`, `unpack`), one texture per layer because each layer has its own context. Unknown names and uniforms the compiler optimised away are skipped.
 
@@ -159,8 +162,8 @@ Your fragment declares its own extra uniforms and a `main()` that writes **premu
 
 A minimal page: a hot plate glowing on top of a square deck. The plate registers with an SVG ring of radius 40 (`k.ring(0, 0, 40, 0, P, 72)`), and the glow stops at the deck's rounded edge, since there is nothing beyond it to light.
 
-`build.mjs`:
-```js
+`build.ts`:
+```ts
 const P = k.fitProjection(points, W, H, { pad: 28, azimuth: 40 });
 const DECK = { x: -90, y: -90, w: 180, d: 180, r: 8 };
 const DATA = { W, H, camera: glCamera(P), plateR: 40, deck: [DECK.w / 2, DECK.r] };
@@ -170,8 +173,8 @@ const stage = `<div class="fx-stage" tabindex="0">${backSvg}<canvas class="fx-la
 const page = k.pageHtml({ title, theme, body: `<style>${CSS}</style>${k.plateHtml({ ...card, body: stage })}`, script: kitScript() + glScript() + LIVE.replace("__DATA__", JSON.stringify(DATA)) });
 ```
 
-`live.js`:
-```js
+`live.ts`:
+```ts
 const D = __DATA__;
 const stage = document.querySelector(".fx-stage");
 const still = matchMedia("(prefers-reduced-motion: reduce)");
@@ -218,8 +221,8 @@ Without `uTime` animation this loop stops once the heat has settled. With an ani
 ### Nothing pops
 Every uniform moves along a smooth envelope in time, with an attack and a decay. Never set a value to 1 in a single frame.
 
-- **One-shot events use `burst`.** The first ignition flash went from 0 to full in one frame and whited out the card. Now every event (flash, shock, ground ring, shutdown pop, card shake) uses the kit's `burst(age, rise, fall)` from `kit/gl.mjs`, a smoothstep attack then an exponential decay:
-  ```js
+- **One-shot events use `burst`.** The first ignition flash went from 0 to full in one frame and whited out the card. Now every event (flash, shock, ground ring, shutdown pop, card shake) uses the kit's `burst(age, rise, fall)` from `kit/gl.ts`, a smoothstep attack then an exponential decay:
+  ```ts
   const flash = calm ? 0 : burst(sinceMain, 0.08, 0.13);
   ```
   with a 50–90 ms attack (zero slope at onset). An alpha function `t·e^(−t)` ties the decay to the rise and stays white too long. Keep whole-card flashes low too: a flash plus a CSS veil at 0.9 opacity whited out the whole card for six frames, so the veil is now `flash × 0.32`.
@@ -281,7 +284,7 @@ Jump straight to a representative steady state (the Raptor jumps to main stage, 
 
 Light is the shipping theme. A page that is light gets shaders designed for paper, not dark-plate glows converted at the end. Seven figures on the isometrics site were built on a dark plate and then converted: a pool reactor, a foundry pour, an afterburner, a glory hole, a tokamak, a plasma cutter and a forge. Each conversion took three review rounds, and every rule in this section is one of their findings.
 
-The Raptor's light plume (`inkOf` in `examples/raptor-engine/live.js`) shows what not to do. It multiplies every hue by a fixed dark red, `vec3(.62,.34,.3)`, and sets alpha to brightness, so the hottest gas comes out darkest and most opaque. Reviewers called it "red ink smoke". Don't copy it. The ripple tank's grey ink (`uPale`) is still a good model for light that isn't a glow: a tone curve `1 − uExpo.x/(1 + (e/uExpo.y)^uExpo.z)` takes the crests to near paper-white and the troughs to the kit's greys, and its water writes only the change from flat water.
+The Raptor's light plume (`inkOf` in `examples/raptor-engine/live.ts`) shows what not to do. It multiplies every hue by a fixed dark red, `vec3(.62,.34,.3)`, and sets alpha to brightness, so the hottest gas comes out darkest and most opaque. Reviewers called it "red ink smoke". Don't copy it. The ripple tank's grey ink (`uPale`) is still a good model for light that isn't a glow: a tone curve `1 − uExpo.x/(1 + (e/uExpo.y)^uExpo.z)` takes the crests to near paper-white and the troughs to the kit's greys, and its water writes only the change from flat water.
 
 ### 8.1 Ink on paper
 Over white, the canvas is normal-blended, premultiplied, and never `screen`, because screen over white is white. No pixel can be brighter than the paper, so light has to read through **saturation and local contrast**:
@@ -449,7 +452,7 @@ In a 3D figure (`references/3d.md`) parts move as rigid groups, so a shader has 
 
 ## 9. Verify
 
-Use `scripts/drive.mjs` for anything that moves; `capture.mjs` also has WebGL now, so it is fine for still shots of a shader page. `references/verify.md` has the usage. On top of the normal checklist:
+Use `scripts/drive.ts` for anything that moves; `capture.ts` also has WebGL now, so it is fine for still shots of a shader page. `references/verify.md` has the usage. On top of the normal checklist:
 
 - **A contact sheet across every transition:** start, each phase change, steady state and stop. Real-time sheets on a heavy WebGL page are too sparse, because a headless capture takes 60–200 ms and blocks animation frames. Slow the page's clock first with `["slow", 0.05]` (20× slow motion for `requestAnimationFrame` and `performance.now`), take the sheet, then `["slow", 1]`. To catch something that starts on the first frame, such as a first-light fade-in, pass `--preload` a file containing `window.__driveSpeed=0.04` so the page runs slowly from its first frame. Wait for a phase with `["until", "document.querySelector('[data-readout]').textContent.includes('main stage')", 8000]` rather than a guessed `wait`. Hold any idle tour off before each sheet: its resume timer runs on the wall clock, not the slowed one, so it can take the targets back mid-sheet. A key press holds it for a few real seconds; for a long slowed sheet, stub the timer with `--preload` and wait for rest first (`verify.md`, "Slow mode doesn't slow timers").
 - **Numbers, not just pictures.** `canvas.getContext("webgl")` returns the page's own context. In a `requestAnimationFrame` callback, read uniforms with `gl.getUniform(gl.getParameter(gl.CURRENT_PROGRAM), location)` and read the mean canvas RGB with `gl.readPixels`. Readback only works in the same task as the draw, because `preserveDrawingBuffer` is off: all-zero frames from a separate task are a test artefact. Log one row per frame across a whole run. Hue and mean luminance should each move monotonically through a phase change, apart from deliberate bursts.
@@ -458,7 +461,7 @@ Use `scripts/drive.mjs` for anything that moves; `capture.mjs` also has WebGL no
 - **In light, probe colours along the physical ramp.** For something that heats or cools, read the centre and rim pixel at several temperatures. They must run dull red → orange → yellow → near-white, with the rim cooler than the centre and no salmon or grey stage. The glory hole's table runs from 255/179/99 centre and 252/114/25 rim at 930 °C, through 211/63/6 and 165/28/1 at about 620 °C, to clear glass by 465 °C. For a volume, read a cross-section of ink from edge to edge: it should peak on the axis.
 - **In light, check the dark path too.** Every light change sits behind `uLight`, so the dark build's frames should match its baseline. Also render a dark plate inside a light page, with and without WebGL (the nested-theme trap, section 8.5).
 - **2× and 4× crops** of every place the effect meets the SVG: rims, lips, deck edges, wall bands, the paper corners, occluders, and every opening the effect is seen through (does it stop at the rim on all four sides, with the recess wall showing below?). Look for seams, hard edges, banding, a dark collar, a double line or a sudden colour switch. In light, also shoot 8–16× crops wherever ink meets a stroke (cut faces, rims, mouths, creases), and look for a pale gap between ink and line, ink painted over a line, or a stroke the ink cleared. Compare the same crop with the front SVG hidden and with the canvas hidden (set `style.display="none"` with an `eval`).
-- **Fallback.** Run `drive.mjs` with `--no-webgl` (every `getContext("webgl")` returns `null`) and check that `data-gl` is absent and the SVG alone still reads, in both themes. In light, the fallback should show the same inks as the shader and the same dark ground, and every body the shader draws should be there. Film first light on a sheet with `--preload` slowing the page from its first frame: the handover from fallback to shader must not dip (section 8.5).
+- **Fallback.** Run `drive.ts` with `--no-webgl` (every `getContext("webgl")` returns `null`) and check that `data-gl` is absent and the SVG alone still reads, in both themes. In light, the fallback should show the same inks as the shader and the same dark ground, and every body the shader draws should be there. Film first light on a sheet with `--preload` slowing the page from its first frame: the handover from fallback to shader must not dip (section 8.5).
 - **Reduced motion** (`--reduced`): one still, representative frame.
 - **Console clean.** A shader compile error arrives as `console.error` from `onError`.
 
@@ -466,7 +469,7 @@ Use `scripts/drive.mjs` for anything that moves; `capture.mjs` also has WebGL no
 
 - Cost is roughly pixels × samples. The Raptor runs 28 volume samples, each with four shock-cell terms, plus a 28-step ground search with 7 bisections, an 8-sample halo, a 10-sample splash curtain and 6 steam samples per canvas, at up to 1.5× device ratio. It runs in SwiftShader, but its frame time hasn't been measured on a real GPU. Measure in a real browser's Performance panel before shipping something heavier, and if it's too slow, cut samples first, then `maxRatio`.
 - The ripple tank's paper shader evaluates the two-source field four times per pixel (once for the refraction shift and three times for the caustic's fixed-point inverse), each source costing six texture reads of its history instead of a 24-step uniform loop. It measured about 1 ms per draw on a laptop GPU; phone cost is unmeasured.
-- Know which GPU you measured. Headless Chrome in `drive.mjs` and `capture.mjs` uses the real GPU when it can and SwiftShader otherwise; log `gl.getParameter(gl.RENDERER)` before trusting a frame time.
+- Know which GPU you measured. Headless Chrome in `drive.ts` and `capture.ts` uses the real GPU when it can and SwiftShader otherwise; log `gl.getParameter(gl.RENDERER)` before trusting a frame time.
 - Spend samples only where they matter. Bound the march (a cylinder or box), start at the ground hit, and gate whole terms on uniforms.
 - Two canvases cost two full-screen passes. Clear the one that has nothing to show (the Raptor's veil is drawn only while steam, vapour or the shock is present).
 - Don't animate `uTime` if nothing in the field needs it. The ripple tank passes `draw(values, 0)` and moves only the wave phase, so a reduced-motion frame is truly still.

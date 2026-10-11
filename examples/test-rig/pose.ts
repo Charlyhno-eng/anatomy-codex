@@ -1,6 +1,6 @@
-import { insetPlan, onTop, pathOf, planOutline, slabOf, type Flat, type SolidPaths } from "../../kit/iso-kit";
-import { carried, type Pose } from "./rig";
-import { AZIMUTH, BUSH_END, COIL_R, COIL_TURNS, DIAL, DIAL_SPAN, DIAL_TOP, DIAL_R, FRAME_X, GLASS_H, GLASS_TOP, GLASS_Z, P, ROD_Y, ROD_Z, at, shift } from "./view";
+import { insetPlan, onTop, pathOf, planOutline, slabOf, type Flat, type SolidPaths } from "../../kit/iso-kit.js";
+import { carried, type Pose } from "./rig.js";
+import { AZIMUTH, BUSH_END, COIL_R, COIL_TURNS, DIAL, DIAL_SPAN, DIAL_TOP, DIAL_R, FRAME_X, GLASS_H, GLASS_TOP, GLASS_Z, P, ROD_Y, ROD_Z, at, shift } from "./view.js";
 
 export interface GlassPaths extends SolidPaths {
   rim: string;

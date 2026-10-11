@@ -1,6 +1,6 @@
 # Kit API
 
-Everything is in `kit/iso-kit.ts`, with the same API in `kit/iso-kit.mjs`. World coordinates are `[x, y, z]`, with x and y on the floor and z up, in units of about 1 px. Screen coordinates are `[sx, sy]` in the SVG viewBox. Paths come back as SVG `d` strings, rounded to 0.1.
+The core source is `kit/iso-kit.ts`; `npm run build` emits its ESM API in `dist/kit/iso-kit.js`. World coordinates are `[x, y, z]`, with x and y on the floor and z up, in units of about 1 px. Screen coordinates are `[sx, sy]` in the SVG viewBox. Paths come back as SVG `d` strings, rounded to 0.1.
 
 ## Contents
 1. Types
@@ -12,12 +12,12 @@ Everything is in `kit/iso-kit.ts`, with the same API in `kit/iso-kit.mjs`. World
 7. SVG strings (framework-free)
 8. Card and page
 9. React components
-10. Round parts on any axis (`kit/lathe.mjs`)
-11. Pipes, tubes and cables (`kit/tube.mjs`)
-12. The audit (`kit/audit.mjs`)
-13. The WebGL layer (`kit/gl.mjs`)
+10. Round parts on any axis (`kit/lathe.ts`)
+11. Pipes, tubes and cables (`kit/tube.ts`)
+12. The audit (`kit/audit.ts`)
+13. The WebGL layer (`kit/gl.ts`)
 14. Tools
-15. Turning groups (`kit/turn.mjs`, `turn-build.mjs`, `turn-audit.mjs`)
+15. Turning groups (`kit/turn.ts`, `turn-build.ts`, `turn-audit.ts`)
 
 ## 1. Types
 ```ts
@@ -107,7 +107,7 @@ Rotations about z can't be done with a screen transform: rebuild the rotating pa
 | Function | Notes |
 |---|---|
 | `solidSvg(paths, { tone = "hi", crease = "faint", halo, lit, flat, className, inner })` | When `paths.seamless` is set (smooth lathe shading, `sphereOf`), the group gets `data-seamless` and `ISO_CSS` strokes each tone region in its own colour, 0.4 wide, so the many abutting tone sheets show no hairline seams. `inner` is extra line markup placed just before the outline (`iso-edge`), for seams, weld lines and band lines that must sit under the silhouette stroke; the React `Solid` takes it as a prop. |
-| `lineSvg(d, { tone = "lo", dotted, dashed, flow, className, free })` | `flow` animates dashes; use it for things moving along a path. `free: true` (or `"start"`, `"end"`) writes `data-free`, telling `scripts/lines.mjs` that an end is meant to stop on a bare face: rule lines that stand for printed text, a needle's tail, a pointer's tip. Every other line end must land on something. |
+| `lineSvg(d, { tone = "lo", dotted, dashed, flow, className, free })` | `flow` animates dashes; use it for things moving along a path. `free: true` (or `"start"`, `"end"`) writes `data-free`, telling `scripts/lines.ts` that an end is meant to stop on a bare face: rule lines that stand for printed text, a needle's tail, a pointer's tip. Every other line end must land on something. |
 | `dotsSvg(points, { size = 0.5, tone = "mid", pulse })` | A point may carry a third value, its opacity (`[x, y, 0.4]`), which is how `dotsOf(..., { fade })` fades a bolt circle out instead of stopping it. |
 | `fadedSvg(list, style)` | Draws a set of lines that each carry an opacity, `[{ d, alpha }]` or `[d, alpha]`, as returned by `ribsOf(..., { fade })`. Lines are grouped by opacity in steps of 0.05, each group in one `<g opacity>`, and lines under 0.02 are dropped. Use it for any texture whose members fade one by one toward a limb: ribs, fins, knurls, rule lines. |
 | `fadeLineSvg(points, { fade = [start, end], tone = "lo", className, stops = 6 })` | One line (screen points) that fades out over its first `start` and last `end` px instead of stopping (each ramp carries `data-free` on its faded end, so the line check passes it). Each ramp is stroked with a `userSpaceOnUse` linear gradient along its own chord (a smoothstep in `stops` steps, the colour taken from `var(--anatomy-<tone>)`, so both themes work), and the middle is a plain `lineSvg`, so there are no overlapping caps, beads or seams. Use it for a texture line that ends in the middle of a face: a groove that runs out, a weld line that stops short of a corner, a rule on a curved plate. Keep a ramp shorter than a quarter turn of the line, since a linear gradient follows the chord. Gradient ids are a hash of the path, so the same line drawn twice shares one. |
@@ -121,9 +121,10 @@ Rotations about z can't be done with a screen transform: rebuild the rotating pa
 |---|---|
 | `plateHtml({ fig, title, hint, readout, keys: [{ mark, label }], caption, body })` | The card. `mark` is one of `raised`, `flat`, `lit`, `edge`, `dim`, `dotted`, `dashed`, `red`, `green`, `blue`. The readout element carries `data-readout`, so live code writes to it. |
 | `pageHtml({ title, theme = "dark", body, script, width = 650 })` | A standalone document with `ISO_CSS` inlined. |
-| `kitScript()` | From `scripts/inline-kit.mjs`. Prepend it to `script` so the page can call kit functions such as `lineOnTop` and `translateAlong` while animating. |
-| `glScript()` | From `scripts/inline-kit.mjs`. The source of `kit/gl.mjs` (`GLSL_ISO`, `glCamera`, `glLayer`, `smooth`, `burst`, `settle`), to inline after `kitScript()` on a page with a shader: `script: kitScript() + glScript() + live`. It doesn't depend on the kit, so a page whose live code calls no kit function can inline it alone (the Raptor uses `glScript() + LIVE`). Everything is one module script, so live code must not redeclare `smooth`, `burst` or `settle`: a second `const smooth` is a SyntaxError that kills the page. |
-| `turnScript()` | From `scripts/inline-kit.mjs`. The 3D runtime (`TURN`, `TURN_CSS`) with `export` stripped, for a page with live parts: `script: turnScript() + glScript() + live`. Its internals are prefixed `t3`/`T3_`, so it inlines beside the kit and the WebGL layer. |
+| `kitScript()` | From `scripts/inline-kit.ts`. Prepend it to `script` so the page can call kit functions such as `lineOnTop` and `translateAlong` while animating. |
+| `glScript()` | From `scripts/inline-kit.ts`. The source of `kit/gl.ts` (`GLSL_ISO`, `glCamera`, `glLayer`, `smooth`, `burst`, `settle`), to inline after `kitScript()` on a page with a shader: `script: kitScript() + glScript() + live`. It doesn't depend on the kit, so a page whose live code calls no kit function can inline it alone (the Raptor uses `glScript() + LIVE`). Everything is one module script, so live code must not redeclare `smooth`, `burst` or `settle`: a second `const smooth` is a SyntaxError that kills the page. |
+| `turnScript()` | From `scripts/inline-kit.ts`. The 3D runtime (`TURN`, `TURN_CSS`) with `export` stripped, for a page with live parts: `script: turnScript() + glScript() + live`. Its internals are prefixed `t3`/`T3_`, so it inlines beside the kit and the WebGL layer. |
+| `browserScript(file)` | Reads a compiled browser `.js` module, removes ESM markers and source map comments, and terminates it with a newline. Use it for `live.js`, models and shared browser geometry before concatenation. |
 | `ISO_CSS` | All the styles. `kit/iso.css` is the same text. |
 
 ## 9. React components
@@ -147,8 +148,8 @@ From `kit/react/live.tsx`, which is `"use client"`:
 - `useInView(ref)`, `useStillness()`, `asksForStillness()`.
 - `Stage` is the wrapper `IsoFigure` uses. It adds `data-inview` for CSS animations.
 
-## 10. Round parts on any axis (`kit/lathe.mjs`)
-`kit/iso-kit.mjs` builds prisms that stand on the floor. `kit/lathe.mjs` turns a profile around **any** axis, for bells, chambers, flanges, valve bodies, pump volutes, pipe fittings, actuators lying at an angle, and connectors on a vertical face. It returns the same `SolidPaths` as `slabOf`, so `solidSvg` paints them. Import it as `import * as G from "../../kit/lathe.mjs"`.
+## 10. Round parts on any axis (`kit/lathe.ts`)
+`kit/iso-kit.ts` builds prisms that stand on the floor. `kit/lathe.ts` turns a profile around **any** axis, for bells, chambers, flanges, valve bodies, pump volutes, pipe fittings, actuators lying at an angle, and connectors on a vertical face. It returns the same `SolidPaths` as `slabOf`, so `solidSvg` paints them. Import it as `import * as G from "../../kit/lathe.js"`.
 
 **Frames.** A frame is `{ o, a, u, v }`: an origin, the unit axis, and two unit radial directions. A point on the part is `(s, r, angle)`: `s` along the axis from `o`, `r` from the axis, and `angle` from `u` toward `v`.
 
@@ -219,7 +220,7 @@ From `kit/react/live.tsx`, which is `"use client"`:
 - The vector helpers are `dot3`, `add3`, `sub3`, `mul3`, `len3`, `unit3`, `cross3` and `lerp3`.
 
 **A long curved body in bands.** Cut it with `bandsOf` so each band depth-sorts against the pipes that wrap it. Every band shares the body's `steps`, its normal field and its surface, so tone curves cross every joint without a step, and the outline comes from `sidesOf` as one curve instead of a chord per band that kinks at every joint. The Raptor bell:
-```js
+```ts
 const BELL = G.bandsOf([[3.2, bell(3.2)], [116, bell(116)]], [14, 28, 44, 60, 76, 92, 106], ENGINE, P, { radius: bell, slope: bellSlope, steps: 96, rows: 8 });
 BELL.bands.forEach((band, index) => put("nozzle", ex(ENGINE, (band.s0 + band.s1) / 2), S(band.paths, { tone: "hi", inner: index === 2 ? Ln(band.seam, { tone: "faint" }) : "" }), { shapes: [record(A.solid(ENGINE, band.profile, { radius: bell }))] }));
 const SIDES = BELL.sidesOf(3.2, 106, { ends: "first" });
@@ -231,9 +232,9 @@ Don't build bands by hand from separate `bandOfProfile` calls on two-knot chords
 - **Four-tone quantisation follows the slope of each facet row** when a body isn't smoothed. Mark every curved knot smooth (`[s, r, 1]`) and the shading follows on its own; a profile of hard knots that still describes a curve needs `smooth: true`. Use `bandsOf` on a body cut into bands.
 - **Smooth shading is heavier.** A small turned ball with `smooth` costs about 9 KB; `sphereOf` costs under 3 KB. Use `sphereOf` for balls and keep `rows` low on small parts.
 
-## 11. Pipes, tubes and cables (`kit/tube.mjs`)
-```js
-import { tubePieces, tubeSvg, runsOf, crossingsOf } from "../../kit/tube.mjs";
+## 11. Pipes, tubes and cables (`kit/tube.ts`)
+```ts
+import { tubePieces, tubeSvg, runsOf, crossingsOf } from "../../kit/tube.js";
 ```
 | Function | What it does |
 |---|---|
@@ -257,12 +258,12 @@ The Raptor's `pipe()` helper is a good pattern:
 
 `cable()` adds a terminal dot at an end that stays with its own assembly and a connector shell (`shells: [start, end]`) at an end that lands on another one, so every cable still ends on something when the figure comes apart. Both helpers take `free: [start, end]` for an end that comes off its mount when the figure is apart, and fillet with `{ P, tube: r }` (see `fillet`). A line that must leave a port facing the viewer starts from an `elbow` (a ball on the boss, rim on sphere at both joints, the line leaving it toward its next point), so the turn happens inside a fitting. `pipe()` puts each end flange's back face on the route end and can end a line in a `coupling` (a union nut at a quick-disconnect) instead of a flange.
 
-## 12. The audit (`kit/audit.mjs`)
-```js
-import * as A from "../../kit/audit.mjs";
+## 12. The audit (`kit/audit.ts`)
+```ts
+import * as A from "../../kit/audit.js";
 ```
 **The one-line hook.** Make a recorder, let every drawing helper put its items and record its shapes into it, settle the keys, and end the build with `auditOrExit`:
-```js
+```ts
 const R = A.recorder(P, { order: STAGGER, spring: SPRING });
 R.put({ piece: "base", at: centre, bias: 0.1, svg, shapes: [R.solid(A.slab(plan, 0, 6, { name: "base.plate" }))] });
 R.route("base.cable", route, 0.6, { piece: "base", gaps, limp: true });
@@ -270,14 +271,14 @@ A.settle(R, P);
 R.items.sort((a, b) => a.key - b.key);
 A.auditOrExit(R, P, { crowd: [] });
 ```
-`node build.mjs --audit` then prints the report and exits non-zero on any failing line; without the flag `auditOrExit` returns at once. A figure that doesn't come apart passes no `order` and every explode check reduces to the rest pose.
+`node dist/build.js --audit` then prints the report and exits non-zero on any failing line; without the flag `auditOrExit` returns at once. A figure that doesn't come apart passes no `order` and every explode check reduces to the rest pose.
 
 | Function | What it does |
 |---|---|
 | `recorder(P, { order = [], spring = {}, ground = grounded })` | `{ items, solids, tubes, routes, put, solid, route, nameFor }`. `put({ at, bias, key, name, piece, move, ride, shapes, ...rest })` adds a drawn item (its key is `dot3(at, V) + bias` unless you pass `key`; the rest, such as `svg`, `route` and `chunk`, is kept on the item) and stamps its shapes with the item's `move`, `ride` and `piece`. `solid(shape)` records a shape and returns it, for the item's `shapes` or for static parts drawn outside the sorted layer. `route(name, points, radius, { owner, touch, bundle, limp, gaps, closed, ends, rims, free, piece, move, ride })` records a pipe or cable: one tube per drawn run between `gaps`, with its `tips`, `tipAxes`, `tipRims` and `free` ends, plus the route for `folds` and `crowding`. `nameFor(base)` numbers repeated names (`base`, `base#2`, …). `order` and `spring` are the live page's stagger and spring. |
 | `explodeStates(order, spring, { uniform = 10, stride = 4 })` | `{ depth, frames, apart }`: the depth-solver states (uniform shares, every `stride`th replayed frame with reversals at every stagger boundary, prefix states) and the clearance frames (every replayed frame plus the prefix states). `{ depth: [0], frames: [] }` when nothing comes apart. |
 | `settle(R, P, { states, skip = sameRun, ...overlapOptions })` | Runs `overlapsOf` and `orderKeys` and writes the keys onto the items. It keeps the order the items had, so you may sort `R.items` afterwards. Run it on every build. |
-| `audit(R, P, { allow, crowd, cover, ground, frames, apart })` | Every check below on the recorded shapes, as one result for `report` and `failures`: clearance at rest, apart and in every frame, solid clearance, crowding at rest and apart (against slender solids too), stand-in shapes, terminals, loose ends, folds, self-overlaps, wobble, seats, supports and depth order. `allow` excuses depth pairs, `crowd` crowding pairs, `cover` stand-in items. It never sees line markup: run `scripts/lines.mjs` on the page for that. |
+| `audit(R, P, { allow, crowd, cover, ground, frames, apart })` | Every check below on the recorded shapes, as one result for `report` and `failures`: clearance at rest, apart and in every frame, solid clearance, crowding at rest and apart (against slender solids too), stand-in shapes, terminals, loose ends, folds, self-overlaps, wobble, seats, supports and depth order. `allow` excuses depth pairs, `crowd` crowding pairs, `cover` stand-in items. It never sees line markup: run `scripts/lines.ts` on the page for that. |
 | `auditOrExit(R, P, { flag = "--audit", argv, ...auditOptions })` | With the flag: `audit`, print the report and a summary line, and set `process.exitCode = 1` on any failure. |
 | `sameRun(a, b)`, `grounded(shape)` | Neighbouring chunks of one route (skipped by the overlap pass), and the default ground (a shape with `ground: true` in its meta or a name starting `stand.`). |
 | `keyAt(item, state, V)`, `labelOf(state)`, `cameraBasis(P)` | An item's sort key in an explode state (`key + lift · share`), a state's printable label, and the camera's screen-right, screen-down and toward-viewer unit vectors `{ R, D, V }`, for probes of your own. |
@@ -337,15 +338,15 @@ A detailed figure fails in ways the eye misses until a reviewer zooms in: a pipe
 
 **`report(result)`** formats everything; **`failures(result)`** counts what should fail the build.
 
-The Raptor wires it like this (`examples/raptor-engine/build.mjs`): its `put`, `tubeItems` and `record` are thin wrappers over `R.put`, `R.route` and `R.solid`, and the end of the build is
-```js
+The Raptor wires it like this (`examples/raptor-engine/build.ts`): its `put`, `tubeItems` and `record` are thin wrappers over `R.put`, `R.route` and `R.solid`, and the end of the build is
+```ts
 A.settle(R, P);
 items.sort((a, b) => a.key - b.key);
 A.auditOrExit(R, P, { crowd: CROWD_OK });
 ```
 The live page reads the same `STAGGER` and `SPRING` from its data, so the audit and the page can't drift apart. Every helper (`turned`, `band`, `flangeAt`, `boss`, `padOn`, `boxAt`, `valveOn`, `pipe`, `cable`, `clampAt`, `strut`, the actuators) records its shape as it puts its item, and the static stand drawn in the back layer (deck, flame cone, deluge ring and feed, columns, splices) is recorded as fixed shapes owned by `stand.frame`, so an explode vector that drove a part into the stand would fail too. Nothing escapes the check.
 
-## 13. The WebGL layer (`kit/gl.mjs`)
+## 13. The WebGL layer (`kit/gl.ts`)
 | Export | What it is |
 |---|---|
 | `GLSL_ISO` | The GLSL prelude that `glLayer` prepends. It holds the camera uniforms (`uCanvas`, `uView`, `uOrigin`, `uK`, `uCam`, `uTime`) and the functions `viewOf`, `project`, `towardViewer`, `rayOf`, `pixelOf`, `lightDir`, `onFloor`, `onWallX`, `onWallY`, `hash12`, `hash13`, `noise2`, `noise3`, `fbm2`, `fbm3`, `window` and `tonemap`. Don't redefine any of them in your fragment: GLSL rejects a second `rayOf`. |
@@ -365,26 +366,26 @@ The live page reads the same `STAGGER` and `SPRING` from its data, so the audit 
 
 A value for `fixed`, `set` or `draw` can be a number (float), an array of length 2–4 (`vec2`–`vec4`), or an array or `Float32Array` longer than 4, which goes to the uniform array of the declared type: `uniform3fv` for `uniform vec3 name[N]` (cover edges, spark positions), `uniform2fv`/`uniform4fv` likewise, and `uniform1fv` for `uniform float name[N]`. There are no ints, matrices or samplers through these calls; a `sampler2D` defaults to texture unit 0, so bind a texture with `layer.gl` (the ripple tank's history texture). Names that aren't in `uniforms` or `fixed`, and uniforms the compiler optimised away, are skipped.
 
-`smooth`, `burst` and `settle` are plain JS: import them from `kit/gl.mjs` in a module, or get them for free on a page that inlines `glScript()`. `references/webgl.md` has the full contract, a minimal page and the craft rules.
+`smooth`, `burst` and `settle` are plain JS: import them from `kit/gl.ts` in a module, or get them for free on a page that inlines `glScript()`. `references/webgl.md` has the full contract, a minimal page and the craft rules.
 
 ## 14. Tools
 | Script | Use it for |
 |---|---|
-| `scripts/capture.mjs` | One-shot screenshots: desktop, phone, hover, keys, timed shots, 4× zooms, reduced motion, console check. Chrome starts with WebGL on (SwiftShader allowed), so shaders show. `--times` delays are measured from the first shot; `--key` sends the same key codes as `drive.mjs` (`7` is `Digit7`, `Comma` sends `,`). |
-| `scripts/drive.mjs` | Scripted sessions in headless Chrome with WebGL on: scroll, move, click, key, slow, until, eval, shots and contact sheets. `--no-webgl` checks the SVG fallback and `--preload file.js` runs a script before the page's own. Use it for shader transitions and anything with a sequence. See `references/verify.md`. |
-| `scripts/lines.mjs` | The line-end check: every texture line in the card must end on a stroke, a dot or an outline, or under a later fill. `--out` rings the failures; exits 1 on any. The same check is the `["lines"]` action of `drive.mjs`. See `references/verify.md`, "Line ends". |
-| `scripts/inline-kit.mjs` | `kitScript()`, `glScript()` and `turnScript()` return the kit, the WebGL layer and the 3D runtime as plain script, to inline into a standalone page. |
-| `scripts/drive.mjs` `["turn", value, group?]` | 3D figures: sets the first turn group (or `group`, or a values object) through `window.__isoTurn` and waits two frames. |
-| `scripts/drive.mjs` `["orbit", out.png, from, to, step, sel?, scale?, [x,y,w,h]?, columns?]` | 3D figures: a contact sheet across angles, each frame labelled θ°. 15° over a full turn; 0.1° across an order change; 1° across a fold-prone bend. |
-| `scripts/turn-check.mjs` | 3D figures. `build.mjs --fidelity` (Node: prisms, rounds, lathes and tubes against the kit builders at P′(θ)); `page.html --order` (needs a `--verify` build), `--pops`, `--lines`, `--perf`, `--states file.json`, `--part name`, `--out dir`. Every check runs its planted control first. `references/3d.md`, section 14. |
-| `scripts/turn-bench.mjs` | 3D figures: `emit` and `order` CPU time in Node over 360 angles, per part kind (median of 7). |
+| `scripts/capture.ts` | One-shot screenshots: desktop, phone, hover, keys, timed shots, 4× zooms, reduced motion, console check. Chrome starts with WebGL on (SwiftShader allowed), so shaders show. `--times` delays are measured from the first shot; `--key` sends the same key codes as `drive.ts` (`7` is `Digit7`, `Comma` sends `,`). |
+| `scripts/drive.ts` | Scripted sessions in headless Chrome with WebGL on: scroll, move, click, key, slow, until, eval, shots and contact sheets. `--no-webgl` checks the SVG fallback and `--preload file.js` runs a script before the page's own. Use it for shader transitions and anything with a sequence. See `references/verify.md`. |
+| `scripts/lines.ts` | The line-end check: every texture line in the card must end on a stroke, a dot or an outline, or under a later fill. `--out` rings the failures; exits 1 on any. The same check is the `["lines"]` action of `drive.ts`. See `references/verify.md`, "Line ends". |
+| `scripts/inline-kit.ts` | `kitScript()`, `glScript()` and `turnScript()` return the kit, the WebGL layer and the 3D runtime as plain script, to inline into a standalone page. |
+| `scripts/drive.ts` `["turn", value, group?]` | 3D figures: sets the first turn group (or `group`, or a values object) through `window.__isoTurn` and waits two frames. |
+| `scripts/drive.ts` `["orbit", out.png, from, to, step, sel?, scale?, [x,y,w,h]?, columns?]` | 3D figures: a contact sheet across angles, each frame labelled θ°. 15° over a full turn; 0.1° across an order change; 1° across a fold-prone bend. |
+| `scripts/turn-check.ts` | 3D figures. `build.ts --fidelity` (Node: prisms, rounds, lathes and tubes against the kit builders at P′(θ)); `page.html --order` (needs a `--verify` build), `--pops`, `--lines`, `--perf`, `--states file.json`, `--part name`, `--out dir`. Every check runs its planted control first. `references/3d.md`, section 14. |
+| `scripts/turn-bench.ts` | 3D figures: `emit` and `order` CPU time in Node over 360 angles, per part kind (median of 7). |
 
-## 15. Turning groups (`kit/turn.mjs`, `turn-build.mjs`, `turn-audit.mjs`)
+## 15. Turning groups (`kit/turn.ts`, `turn-build.ts`, `turn-audit.ts`)
 The optional 3D mode. `references/3d.md` is the guide; this is the reference.
-```js
-import { turning, separate, gjk } from "../../kit/turn-build.mjs";
-import { TURN, TURN_CSS } from "../../kit/turn.mjs";
-import * as TA from "../../kit/turn-audit.mjs";
+```ts
+import { turning, separate, gjk } from "../../kit/turn-build.js";
+import { TURN, TURN_CSS } from "../../kit/turn.js";
+import * as TA from "../../kit/turn-audit.js";
 ```
 
 ### `turning(P, { recorder, scale = 1 })` → `T`
@@ -411,7 +412,7 @@ import * as TA from "../../kit/turn-audit.mjs";
 | `TURN.materials`, `TURN.materialCss()`, `TURN.css()`, `TURN_CSS` | Material names; the CSS. |
 | `TURN.camera`, `TURN.poses`, `TURN.cams`, `TURN.prepare`, `TURN.emit`, `TURN.order`, `TURN.frame`, `TURN.gjk`, `TURN.disjoint`, `TURN.q`, `TURN.levels` | The pipeline, for tools: cameras per group, a prepared scene, one part's frame, a layer's order. |
 
-### Orbit audit (`kit/turn-audit.mjs`)
+### Orbit audit (`kit/turn-audit.ts`)
 | Export | What it does |
 |---|---|
 | `orbitOrExit(T, R, P, { flag = "--audit", argv, sweep, clips, poses, crowd, cover, fittings, quick, only, log })` | Runs `orbit` when the flag is present, prints the report, sets exit code 1 on any failure. Ends `turn audit passed` only for a full run; with `only` it ends `turn audit partial`, with `quick` `turn audit quick` (`3d.md`, section 13). |

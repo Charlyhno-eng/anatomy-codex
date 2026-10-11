@@ -1,0 +1,33 @@
+{
+  "name": "anatomy-codex",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A TypeScript kit and Codex skill for interactive isometric explanations",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=22.20.0" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc && node dist/scripts/build.js",
+    "build:examples": "node dist/scripts/build-examples.js",
+    "preview": "node dist/scripts/preview.js",
+    "dev": "npm run build && npm run preview",
+    "capture": "node dist/scripts/capture.js",
+    "drive": "node dist/scripts/drive.js",
+    "lines": "node dist/scripts/lines.js",
+    "skill:install": "npm run build && node dist/scripts/install-skill.js",
+    "test": "npm run build && node --test --test-concurrency=1 dist/tests/*.test.js",
+    "test:browser": "npm run build && node dist/tests/browser.js"
+  },
+  "dependencies": {
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.17",
+    "@types/react": "19.2.9",
+    "@types/react-dom": "19.2.3",
+    "esbuild": "0.27.3",
+    "typescript": "5.9.3"
+  }
+}

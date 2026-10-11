@@ -1,4 +1,4 @@
-import { iso, type Flat, type Plan, type Point3, type Projection } from "../../kit/iso-kit";
+import { iso, type Flat, type Plan, type Point3, type Projection } from "../../kit/iso-kit.js";
 
 export const WIDTH = 600;
 export const HEIGHT = 340;

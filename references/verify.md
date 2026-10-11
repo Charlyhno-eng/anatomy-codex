@@ -3,32 +3,32 @@
 Look at the figure the way a demanding reviewer would, before anyone else does. Rendering it is cheap, and guessing is expensive.
 
 ## Capture
-`scripts/capture.mjs` starts its own headless Chrome (set `CHROME_PATH` if it can't find one), loads a file or URL, and clips to `.iso-plate` by default. It also prints the readout, any console errors or exceptions, and whether the page scrolls sideways.
+`scripts/capture.ts` starts its own headless Chrome (set `CHROME_PATH` if it can't find one), loads a file or URL, and clips to `.iso-plate` by default. It also prints the readout, any console errors or exceptions, and whether the page scrolls sideways.
 
 ```sh
-node scripts/capture.mjs page.html --out shots/desk.png                         # desktop 1440, dpr 2
-node scripts/capture.mjs page.html --out shots/phone.png --width 390            # phone
-node scripts/capture.mjs page.html --out shots/hover.png --hover 0.7,0.5        # pointer at 70% across
-node scripts/capture.mjs page.html --out shots/tour.png --times 1200,2400,3600  # motion: extra shots over time
-node scripts/capture.mjs page.html --out shots/keys.png --key ArrowRight,ArrowRight
-node scripts/capture.mjs page.html --out shots/joint.png --zoom 200,80,220,170  # close-up at 4x, in card px
-node scripts/capture.mjs page.html --out shots/still.png --reduced              # reduced motion
-node scripts/capture.mjs http://localhost:3000/docs --select "figure:nth-of-type(3) .iso-plate"   # one figure on a dev-server page
+node dist/scripts/capture.js page.html --out shots/desk.png                         # desktop 1440, dpr 2
+node dist/scripts/capture.js page.html --out shots/phone.png --width 390            # phone
+node dist/scripts/capture.js page.html --out shots/hover.png --hover 0.7,0.5        # pointer at 70% across
+node dist/scripts/capture.js page.html --out shots/tour.png --times 1200,2400,3600  # motion: extra shots over time
+node dist/scripts/capture.js page.html --out shots/keys.png --key ArrowRight,ArrowRight
+node dist/scripts/capture.js page.html --out shots/joint.png --zoom 200,80,220,170  # close-up at 4x, in card px
+node dist/scripts/capture.js page.html --out shots/still.png --reduced              # reduced motion
+node dist/scripts/capture.js http://localhost:3000/docs --select "figure:nth-of-type(3) .iso-plate"   # one figure on a dev-server page
 ```
-`--select` takes any CSS selector; by default it clips to the first `.iso-plate`. Each `--times` delay counts from the first shot, so `1200,2400,3600` shoots at about 1.2, 2.4 and 3.6 s after it (a capture takes 60–200 ms, so delays closer together than that run late), saved as `name-<ms>.png`. `--key` sends the same key codes as `drive.mjs` (`7` as `Digit7`, `.` as `Period`; write a comma as `Comma`, since the list is comma separated). The other options are `--height` (1000), `--scale` (2), `--wait` (2500 ms before the first shot), `--zoom-scale` (4) and `--theme dark|light`. Read every PNG you make: open it and look.
+`--select` takes any CSS selector; by default it clips to the first `.iso-plate`. Each `--times` delay counts from the first shot, so `1200,2400,3600` shoots at about 1.2, 2.4 and 3.6 s after it (a capture takes 60–200 ms, so delays closer together than that run late), saved as `name-<ms>.png`. `--key` sends the same key codes as `drive.ts` (`7` as `Digit7`, `.` as `Period`; write a comma as `Comma`, since the list is comma separated). The other options are `--height` (1000), `--scale` (2), `--wait` (2500 ms before the first shot), `--zoom-scale` (4) and `--theme dark|light`. Read every PNG you make: open it and look.
 
-Both scripts start Chrome with WebGL on (`--enable-unsafe-swiftshader --ignore-gpu-blocklist`), so shaders show in `capture.mjs` stills too. Use `drive.mjs` for anything that has to be timed or slowed down.
+Both scripts start Chrome with WebGL on (`--enable-unsafe-swiftshader --ignore-gpu-blocklist`), so shaders show in `capture.ts` stills too. Use `drive.ts` for anything that has to be timed or slowed down.
 
 ## Drive
-`scripts/drive.mjs` runs a scripted session in headless Chrome with WebGL on. Use it for sequences: hover, then click, then type, then wait for a phase. Use it also for slowed-down contact sheets that catch pops, and for the no-WebGL fallback. It prints the readout after each shot, then any console errors and exceptions.
+`scripts/drive.ts` runs a scripted session in headless Chrome with WebGL on. Use it for sequences: hover, then click, then type, then wait for a phase. Use it also for slowed-down contact sheets that catch pops, and for the no-WebGL fallback. It prints the readout after each shot, then any console errors and exceptions.
 
 ```sh
-node scripts/drive.mjs page.html '[["wait",1500],["move",".rt-stage",0.7,0.4],["wait",600],["shot","shots/hover.png"]]'
-node scripts/drive.mjs page.html --actions steps.json --height 1300
-node scripts/drive.mjs page.html --actions steps.json --width 390
-node scripts/drive.mjs page-light.html --actions steps.json --reduced
-node scripts/drive.mjs page.html --actions steps.json --no-webgl
-node scripts/drive.mjs page-light.html --actions steps.json --preload slow.js
+node dist/scripts/drive.js page.html '[["wait",1500],["move",".rt-stage",0.7,0.4],["wait",600],["shot","shots/hover.png"]]'
+node dist/scripts/drive.js page.html --actions steps.json --height 1300
+node dist/scripts/drive.js page.html --actions steps.json --width 390
+node dist/scripts/drive.js page-light.html --actions steps.json --reduced
+node dist/scripts/drive.js page.html --actions steps.json --no-webgl
+node dist/scripts/drive.js page-light.html --actions steps.json --preload slow.js
 ```
 Options are `--width` (1440), `--height` (1100), `--scale` (1), `--reduced`, `--theme dark|light`, `--no-webgl` (every `getContext("webgl")` or `"webgl2"` returns `null`, to check the SVG fallback), `--preload file.js` (a script that runs before the page's own scripts: counters, stubs, hooks, or `window.__driveSpeed=0.04` to run slowly from the first frame) and `--actions file.json`. Selectors default to the first `.iso-plate`, and fractions run 0..1 across the element.
 
@@ -61,18 +61,18 @@ Traps:
 - **Pages inline their live code as `<script type="module">`,** so top-level variables aren't visible to `eval`. Read state through the DOM instead: readout text, `aria-valuetext`, `data-*` attributes. To count frames or read a value per frame, install a hook with `--preload` (it runs before the page, so it can wrap `requestAnimationFrame` or `HTMLCanvasElement.prototype.getContext`).
 
 ## Line ends
-The audit sees recorded shapes, never line markup, so it can't see a seam, rule, rib or tick that stops in the middle of a face. `scripts/lines.mjs` checks the drawing itself, in headless Chrome:
+The audit sees recorded shapes, never line markup, so it can't see a seam, rule, rib or tick that stops in the middle of a face. `scripts/lines.ts` checks the drawing itself, in headless Chrome:
 
 ```sh
-node scripts/lines.mjs page.html --out shots/lines.png
-node scripts/lines.mjs page-light.html --out shots/lines-light.png --reduced
-node scripts/drive.mjs page.html '[["key"," "],["wait",2000],["lines","shots/lines-apart.png"]]'
+node dist/scripts/lines.js page.html --out shots/lines.png
+node dist/scripts/lines.js page-light.html --out shots/lines-light.png --reduced
+node dist/scripts/drive.js page.html '[["key"," "],["wait",2000],["lines","shots/lines-apart.png"]]'
 ```
 ```
 line ends: 3 of 1148 ends on 295 lines float
   iso-line faint in it k -0.080  end  7.25 px from anything   at card 507.4,407.2   length 75.7   d M392.1 381.7L507.4 407.2…
 ```
-Every open subpath of every `.iso-line` in the card (seams, grooves, ribs from `fadedSvg`, rule lines, ticks, needles, pointers, wires) must end within 1 viewBox px of another stroke, a dot or an outline, or under a fill painted after it. A short straight mark (up to 7 px: a tick) needs one end rooted within 2 px; both ends floating fails. The kit's own outlines, creases, bevels and tube edges aren't checked, and neither are ends that a `fadeLineSvg` ramp fades out. `lineSvg(d, { free: true })` (or `"start"`, `"end"`) marks an end that is meant to stop: rule lines that stand for printed text, a needle's tail, a pointer's tip. Use it for nothing else. It prints each floating end in card px, ready for `capture.mjs --zoom`, with the start of its `d` so you can find it in the build; `--out` rings them on a 2× shot of the card. Run it on both themes and in every pose the figure rests in, and fix every line until it prints 0:
+Every open subpath of every `.iso-line` in the card (seams, grooves, ribs from `fadedSvg`, rule lines, ticks, needles, pointers, wires) must end within 1 viewBox px of another stroke, a dot or an outline, or under a fill painted after it. A short straight mark (up to 7 px: a tick) needs one end rooted within 2 px; both ends floating fails. The kit's own outlines, creases, bevels and tube edges aren't checked, and neither are ends that a `fadeLineSvg` ramp fades out. `lineSvg(d, { free: true })` (or `"start"`, `"end"`) marks an end that is meant to stop: rule lines that stand for printed text, a needle's tail, a pointer's tip. Use it for nothing else. It prints each floating end in card px, ready for `capture.ts --zoom`, with the start of its `d` so you can find it in the build; `--out` rings them on a 2× shot of the card. Run it on both themes and in every pose the figure rests in, and fix every line until it prints 0:
 
 | You see | Fix |
 |---|---|
@@ -85,10 +85,10 @@ Every open subpath of every `.iso-line` in the card (seams, grooves, ribs from `
 | Rule lines on a label plate | `free: true`. They stand for text. |
 
 ## Audit
-Screenshots catch what you think to look at. A figure with pipes, cables and round parts also needs the geometry checked, because a cable through a duct or a part drawn over the thing in front of it is invisible at 1× and obvious at 4×. Wire `kit/audit.mjs` into the build (`kit.md`, section 12): helpers put into one `A.recorder(P, { order, spring })`, the build calls `A.settle(R, P)` and ends with `A.auditOrExit(R, P)`, then run:
+Screenshots catch what you think to look at. A figure with pipes, cables and round parts also needs the geometry checked, because a cable through a duct or a part drawn over the thing in front of it is invisible at 1× and obvious at 4×. Wire `kit/audit.ts` into the build (`kit.md`, section 12): helpers put into one `A.recorder(P, { order, spring })`, the build calls `A.settle(R, P)` and ends with `A.auditOrExit(R, P)`, then run:
 
 ```sh
-node examples/raptor-engine/build.mjs --audit
+node dist/examples/raptor-engine/build.js --audit
 ```
 ```
 clearance: 0 problems
@@ -137,21 +137,23 @@ It prints `audit passed` or `audit failed: n problems` and exits non-zero on any
 A zero audit is necessary, not sufficient: it can't see a seam, a staircase or a texture that stops, and it only checks what you recorded. A stand-in shape that silences it is a bug, which is why it fails one. Run the line check, then look.
 
 ## Orbit (3D figures)
+
+The following commands run from the compiled example directory (for the reference scene: `cd dist/examples/turning-dial`). Substitute the page names for your own figure.
 A figure with turning groups (`references/3d.md`) adds the orbit audit and the browser checks. Run them on the light page and the dark page.
 ```sh
-node build.mjs --light --audit > audit.txt 2>&1 &   # the full run, in the background: ends "turn audit passed"
-node build.mjs --light --audit --quick    # ≈ 10× fewer states while iterating: ends "turn audit quick"
-node build.mjs --light --audit --quick --only=order,continuity   # a subset: the rest print "skipped", ends "turn audit partial"
-node build.mjs --light --verify           # a page with window.__isoVerify (recorded shapes) for --order
-node ../../scripts/turn-check.mjs build.mjs --fidelity
-node ../../scripts/turn-check.mjs page-verify-light.html --order --step 1
-node ../../scripts/turn-check.mjs page-verify-light.html --order --states clip.json     # hinges and clips: --step turns the first turn group only
-node ../../scripts/turn-check.mjs page-light.html --pops --no-webgl --states tilt-path.json   # one hinge as a continuous path at 0.02°
-node ../../scripts/turn-check.mjs page-light.html --pops --no-webgl --step 1 --out shots/pops
-node ../../scripts/turn-check.mjs page-light.html --lines
-node ../../scripts/turn-check.mjs page-light.html --perf --width 1440
-node ../../scripts/turn-check.mjs page-light.html --perf --width 390 --throttle 4
-node ../../scripts/drive.mjs page-light.html '[["orbit", "shots/orbit.png", 0, 345, 15]]'
+node build.js --light --audit > audit.txt 2>&1 &   # the full run, in the background: ends "turn audit passed"
+node build.js --light --audit --quick    # ≈ 10× fewer states while iterating: ends "turn audit quick"
+node build.js --light --audit --quick --only=order,continuity   # a subset: the rest print "skipped", ends "turn audit partial"
+node build.js --light --verify           # a page with window.__isoVerify (recorded shapes) for --order
+node ../../scripts/turn-check.js build.js --fidelity
+node ../../scripts/turn-check.js page-verify-light.html --order --step 1
+node ../../scripts/turn-check.js page-verify-light.html --order --states clip.json     # hinges and clips: --step turns the first turn group only
+node ../../scripts/turn-check.js page-light.html --pops --no-webgl --states tilt-path.json   # one hinge as a continuous path at 0.02°
+node ../../scripts/turn-check.js page-light.html --pops --no-webgl --step 1 --out shots/pops
+node ../../scripts/turn-check.js page-light.html --lines
+node ../../scripts/turn-check.js page-light.html --perf --width 1440
+node ../../scripts/turn-check.js page-light.html --perf --width 390 --throttle 4
+node ../../scripts/drive.js page-light.html '[["orbit", "shots/orbit.png", 0, 345, 15]]'
 ```
 **Time.** A 28-part figure with one turn, one hinge and one clip took 85 s quick and 17 minutes full, past a 10-minute shell timeout: run the full audit in the background. Quick runs undersample (`continuity` checks 100 halving candidates instead of 800, and the order scan a tenth of the states), so they guide, and only the full run's `turn audit passed` counts. A run with `--only` ends `turn audit partial`, never `passed`.
 
@@ -179,18 +181,18 @@ node ../../scripts/drive.mjs page-light.html '[["orbit", "shots/orbit.png", 0, 3
 ## Close-ups
 The owner found the Raptor's faults on a close-up of the light theme: cables over the main duct, a stepped bell, bolt rows that stopped dead. Shoot that close-up yourself, everywhere, before anyone else does.
 
-1. **Build both themes** (`node build.mjs` and `node build.mjs --light`) and list the junctions: every flange, tee, elbow, ball joint, clamp, valve, bellows, band, saddle pad and crossing, every curved body (bells, throats, domes, cones, valve bulges, balls), every band joint of a body cut with `bandsOf`, and every place a texture ends. On flat parts too: every seam, weld, stiffener and trim line on a box face (does it reach both corners?), every row of ticks or marks on a plate (is it on a ruler strip?), every rib row's two ends along its axis, every textured hose at a chunk joint and at its ferrules, every rod that slides (at rest, mid-stroke and at full stroke), and every window or screen with text or shader content in it.
+1. **Build both themes** (`node dist/build.js` and `node dist/build.js --light`) and list the junctions: every flange, tee, elbow, ball joint, clamp, valve, bellows, band, saddle pad and crossing, every curved body (bells, throats, domes, cones, valve bulges, balls), every band joint of a body cut with `bandsOf`, and every place a texture ends. On flat parts too: every seam, weld, stiffener and trim line on a box face (does it reach both corners?), every row of ticks or marks on a plate (is it on a ruler strip?), every rib row's two ends along its axis, every textured hose at a chunk joint and at its ferrules, every rod that slides (at rest, mid-stroke and at full stroke), and every window or screen with text or shader content in it.
 2. **Shoot each area at 4× in both themes, assembled.** `--zoom x,y,w,h` takes a region in card px and scales it by `--zoom-scale` (4):
    ```sh
-   node scripts/capture.mjs page.html --out shots/joint-dark.png --zoom 200,80,220,170
-   node scripts/capture.mjs page-light.html --out shots/joint-light.png --zoom 200,80,220,170
+   node dist/scripts/capture.js page.html --out shots/joint-dark.png --zoom 200,80,220,170
+   node dist/scripts/capture.js page-light.html --out shots/joint-light.png --zoom 200,80,220,170
    ```
 3. **And apart**, if the figure comes apart. Drive it there, wait for rest, then shoot a region at scale 4. The Raptor toggles apart on Space and its readout starts `apart ·` only once every spring has arrived, so `apart.json` is
    ```json
    [["key", " "], ["until", "document.querySelector('[data-readout]').textContent.startsWith('apart')"], ["wait", 400],
     ["shot", "shots/apart-joint.png", null, 4, [200, 80, 220, 170]]]
    ```
-   run with `node scripts/drive.mjs page.html --actions apart.json`, then again on `page-light.html`.
+   run with `node dist/scripts/drive.js page.html --actions apart.json`, then again on `page-light.html`.
 4. **Look at each PNG for these faults, in this order:** a line that runs through or into something; a crossing whose nearer line is drawn behind; a bend, end or clamp sitting on another line's outline; a flange standing off its port or sunk into it; tone blocks stepping across a curved surface, scallops or a pale wedge; a band ending on a straight cut; a row of ribs, dots or rule lines stopping in the middle of a surface; a hairline across a tube's shine or shade at a chunk joint; a seam notching the outline; a seam, stiffener or rib that stops short of the edge it should reach; a short mark on a top that touches nothing; a hose texture with straight hard sides, or one that restarts or is cut at a chunk joint; a rod whose outline breaks while it moves; text that crosses its window; shader content that spills past an opening's rim. Compare with the previous round's shot of the same region.
 5. **Shaders:** the same regions during the effect, plus contact sheets slowed with `["slow", 0.05]` (`webgl.md`, section 9).
 
@@ -200,7 +202,7 @@ The owner found the Raptor's faults on a close-up of the light theme: cables ove
 Light is the shipping theme, and on paper a glow is ink. Every light conversion so far failed review first on something a picture of one frame doesn't show: ink that rose while the light fell, a pale flash before the glow, a salmon stage, a fringe beside a stroke. So measure the ink as well as looking at it (`webgl.md`, section 8).
 
 **Ink per frame.** Save this as `ink.js` and pass it with `--preload`. For every frame the page draws, it logs the mean ink one canvas region lays on white, `255 − lum(rgb + 255 − a)`, read back in the same task as the draw:
-```js
+```ts
 const get = HTMLCanvasElement.prototype.getContext;
 HTMLCanvasElement.prototype.getContext = function (kind, ...rest) {
   const gl = get.call(this, kind, ...rest);
@@ -260,13 +262,13 @@ window.requestAnimationFrame = (callback) => raf((now) => {
 - [ ] At 4×, every line ends on a face, another line or a terminal dot. Nothing stops in the air.
 - [ ] No leader lines, balloons, dimension arrows or floating labels; at most one engraved label.
 - [ ] Painter's order is right everywhere: nothing behind shows through, springs and frames are split.
-- [ ] **Audit zero.** With pipes, cables or round parts in the figure, `node build.mjs --audit` ends `audit passed`: zero on every failing line, assembled, apart and in every frame of the replayed explode (opening, closing and reversing). No interlock was hidden with a key bias, and every excused pair (`allow`, `crowd`) has been looked at at 8×.
+- [ ] **Audit zero.** With pipes, cables or round parts in the figure, `node dist/build.js --audit` ends `audit passed`: zero on every failing line, assembled, apart and in every frame of the replayed explode (opening, closing and reversing). No interlock was hidden with a key bias, and every excused pair (`allow`, `crowd`) has been looked at at 8×.
 - [ ] No pipe or cable passes through another pipe, cable or solid, and every crossing is drawn in depth order: the nearer line on top, crossing on straights, well apart in depth.
 - [ ] No line runs across the subject's face where it could run beside the structure; no bend pinches to a V on screen; no bend, end or clamp lands on another line's outline, assembled or apart.
 - [ ] Every flange sits on its port (on a saddle pad if the port is curved); every collar, clamp, band, bellows and valve gaps the pipe it wraps; every valve and bellows sits on a straight; no route doubles back on screen; every end, apart too, ends on a flange, coupling, connector or terminal dot.
 - [ ] **Junction close-ups.** Every junction area shot at 4× in both themes, assembled and apart (see "Close-ups"), and each PNG read.
 - [ ] **No staircase.** Every curved surface is smooth-shaded at 4×: no stepped tone blocks, no scalloped terraces, no pale wedge, no band that ends on a straight cut, no kink at a band joint; waisted bodies follow their true outline; seams meet the outline without a nick.
-- [ ] **Line ends zero.** `node scripts/lines.mjs` prints `line ends: 0` on both themes and in every resting pose; every `free` end is a rule line standing for text, a needle tail or a pointer tip.
+- [ ] **Line ends zero.** `node dist/scripts/lines.js` prints `line ends: 0` on both themes and in every resting pose; every `free` end is a rule line standing for text, a needle tail or a pointer tip.
 - [ ] **Shapes are true.** No stand-in shapes: what is recorded is what is drawn, including rods that slide.
 - [ ] **No abrupt texture ends.** Every row of ribs, bolt dots, rule lines or grooves ends on a real edge or fades out; none stops at full strength in the middle of a surface, flat faces included. Seams on boxes wrap their corners, rib rows end on their seams, ticks sit on a ruler strip, and a texture on a hose follows its cross-section and runs through every chunk joint. Pipe stripes run onto their end caps and show no hairline at any chunk joint, also on a strongly curved tapered tube (a volute).
 
@@ -343,9 +345,9 @@ window.requestAnimationFrame = (callback) => raf((now) => {
 | A pipe's stripes stop short of its end | An end without a cap. `tubePieces` caps every end by default; don't pass `caps: false` for an end that shows. |
 | Parts slide along their mount while the figure comes apart | They move with one assembly's vector on another's spring. Give the item that assembly's `ride`. |
 | A long turned body has a kinked outline at band joints | Build it with `G.bandsOf` and draw the sides once with its `sidesOf` (`kit.md`, section 10). |
-| A texture line stops in the middle of a face | End it on a real edge, or draw it with `fadeLineSvg(points, { fade })` so it ramps out. `scripts/lines.mjs` lists every one. |
+| A texture line stops in the middle of a face | End it on a real edge, or draw it with `fadeLineSvg(points, { fade })` so it ramps out. `scripts/lines.ts` lists every one. |
 | A seam on a box stops short of its corners | `k.sideSeam(plan, z, P, steps)` as `inner`. |
 | A hose braid or corrugation with straight hard sides, or broken at chunk joints | `tubePieces(…, { rings: { pitch, twist, cross: true } })`. |
 | A rod's outline notched while it slides | One rod from `G.rodOut`, clipped at the gland, recorded with `A.slide`; never overlapping copies. |
 | LCD or counter digits cross the window | Fit the type to the window's height and widest string, and clip it. |
-| Stray triangles of outline across a valve or bulge | An old kit joined a broken silhouette; the kit now falls back to the hull when a side's silhouette has gaps. Rebuild with the current `lathe.mjs`. |
+| Stray triangles of outline across a valve or bulge | An old kit joined a broken silhouette; the kit now falls back to the hull when a side's silhouette has gaps. Rebuild with the current `lathe.ts`. |

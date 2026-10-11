@@ -1,0 +1,21 @@
+:root { color-scheme: light; font: 15px/1.5 system-ui, sans-serif; background: #f8f7f3; color: #242424; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 900px; margin: 24px auto; padding: 0 20px 32px; }
+h1 { font-size: 26px; line-height: 1.2; margin-bottom: 6px; }
+header p { margin-top: 0; color: #53534f; }
+.controls { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin: 14px 0; }
+label { display: flex; gap: 8px; align-items: center; }
+select, button { padding: 9px 12px; border: 1px solid #aaa9a3; border-radius: 6px; background: white; color: inherit; font: inherit; }
+button { cursor: pointer; }
+#export { background: #242424; color: white; border-color: #242424; }
+button:disabled { opacity: .45; cursor: default; }
+a { color: #174a82; text-underline-offset: 3px; }
+.preview { border: 1px solid #d0cfc8; border-radius: 8px; overflow: hidden; background: #f8f7f3; }
+iframe { width: 100%; height: 500px; display: block; border: 0; }
+.note { max-width: 760px; color: #53534f; font-size: 13px; }
+output { display: block; min-height: 24px; overflow-wrap: anywhere; }
+progress { width: 100%; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 3px solid #357abd; outline-offset: 3px; }
+@media (max-width: 550px) { main { padding: 0 10px 24px; } .controls { gap: 10px; } }

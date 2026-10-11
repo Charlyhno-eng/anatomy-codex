@@ -1,4 +1,4 @@
-import { cameraOf, type Flat, iso, type Plan, type Point3, type Projection } from "../../kit/iso-kit";
+import { cameraOf, type Flat, iso, type Plan, type Point3, type Projection } from "../../kit/iso-kit.js";
 
 export const RADII = [30, 22] as const;
 export const GAPS = [4, 10, 16, 24, 32, 44] as const;

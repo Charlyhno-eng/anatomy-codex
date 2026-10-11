@@ -1,4 +1,4 @@
-import { circleRing, extrude, insetPlan, onTop, pathOf, planOutline, slabOf, topMatrix, type Flat, type Plan, type Plane, type Point3 } from "../../kit/iso-kit";
+import { circleRing, extrude, insetPlan, onTop, pathOf, planOutline, slabOf, topMatrix, type Flat, type Plan, type Plane, type Point3 } from "../../kit/iso-kit.js";
 import {
   BAR,
   BAR_H,
@@ -41,7 +41,7 @@ import {
   ROD_Z,
   STEM,
   at,
-} from "./view";
+} from "./view.js";
 
 const solid = (plan: Plan, z: number, h: number, steps = 6, bevel = 0) => slabOf(plan, z, h, P, steps, bevel);
 const cylinder = (cx: number, cy: number, r: number, z: number, h: number, steps = 32) => extrude(circleRing(cx, cy, r, steps), z, h, P, { convex: true });

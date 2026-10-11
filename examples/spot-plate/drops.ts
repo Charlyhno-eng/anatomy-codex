@@ -1,5 +1,5 @@
-import { type Flat, iso, pathOf, type Plane } from "../../kit/iso-kit";
-import { BIG_Y, CLIMB, FLOOR, GAPS, LIGHT, P, RA, RB, THICK, VIEW, fieldOf, rowX, rowY, spanOf, type Field } from "./rig";
+import { type Flat, iso, pathOf, type Plane } from "../../kit/iso-kit.js";
+import { BIG_Y, CLIMB, FLOOR, GAPS, LIGHT, P, RA, RB, THICK, VIEW, fieldOf, rowX, rowY, spanOf, type Field } from "./rig.js";
 
 const STEP = 2;
 const FINE = 0.5;

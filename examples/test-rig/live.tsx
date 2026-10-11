@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { IsoFigure } from "../../kit/react/draw";
-import { asksForStillness, useReadout } from "../../kit/react/live";
-import { frameOf, type Frame } from "./pose";
-import { HALF, REST, memberAt, one, poseOf, readoutOf, settled, sizeText, step, type Member, type Pose } from "./rig";
-import { EX, FINGER_MOST, GRAB_MOST, HEIGHT, HOVER, PROBE_HOME, PROBE_MAX, PROBE_MIN, WIDTH, at } from "./view";
+import { IsoFigure } from "../../kit/react/draw.js";
+import { asksForStillness, useReadout } from "../../kit/react/live.js";
+import { frameOf, type Frame } from "./pose.js";
+import { HALF, REST, memberAt, one, poseOf, readoutOf, settled, sizeText, step, type Member, type Pose } from "./rig.js";
+import { EX, FINGER_MOST, GRAB_MOST, HEIGHT, HOVER, PROBE_HOME, PROBE_MAX, PROBE_MIN, WIDTH, at } from "./view.js";
 
 const FOLLOW = 0.09;
 const DOWN = 0.07;

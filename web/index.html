@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Anatomy for Codex</title>
+  <link rel="stylesheet" href="web/app.css">
+  <script src="web/app.js" defer></script>
+</head>
+<body>
+  <main>
+    <header><h1>Anatomy for Codex</h1><p>Explore a scene, interact with it, and export a short GIF.</p></header>
+    <section class="controls" aria-label="Scene settings">
+      <label>Scene <select id="scene">
+        <option value="dial-indicator">Dial indicator</option><option value="desk-computer">Desk computer</option>
+        <option value="arcade-cabinet">Arcade cabinet</option><option value="ripple-tank">Ripple tank</option>
+        <option value="raptor-engine">Raptor engine</option><option value="turning-dial">Turning dial</option>
+        <option value="test-rig">Test rig</option><option value="spot-plate">Spot plate</option>
+      </select></label>
+      <label>Theme <select id="theme"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+      <a id="open" href="examples/dial-indicator/dial-indicator-light.html" target="_blank" rel="noopener">Open scene ↗</a>
+    </section>
+    <section class="preview" aria-label="Interactive scene"><iframe id="preview" title="Interactive Anatomy scene"></iframe></section>
+    <section class="controls" aria-label="GIF export">
+      <label>Duration <select id="duration"><option value="2">2 seconds</option><option value="4" selected>4 seconds</option><option value="6">6 seconds</option><option value="8">8 seconds</option></select></label>
+      <button id="export" disabled>Export GIF</button><button id="cancel" hidden>Cancel</button>
+      <a id="download" hidden>Download GIF</a>
+    </section>
+    <p class="note">For GIF export, use desktop Chrome or Edge and share this tab when prompted. Keep the whole figure visible; press Escape to cancel. Only the figure is recorded. GIFs loop and stay below 3 MiB; shorter clips retain more detail.</p>
+    <progress id="progress" hidden aria-label="Export progress"></progress>
+    <output id="status" role="status" aria-live="polite">Loading…</output>
+  </main>
+</body>
+</html>

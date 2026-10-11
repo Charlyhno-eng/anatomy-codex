@@ -6,13 +6,13 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting. A screenshot helps most, and for a drawing fault a 4× close-up (`node scripts/capture.mjs page.html --zoom x,y,w,h`).
+        Thanks for reporting. A screenshot helps most, and for a drawing fault a 4× close-up (`node dist/scripts/capture.js page.html --zoom x,y,w,h`).
   - type: dropdown
     id: area
     attributes:
       label: Where is the problem?
       options:
-        - A figure Claude made with the skill
+        - A figure Codex made with the skill
         - One of the examples
         - The kit (kit/)
         - A check script (scripts/)
@@ -64,10 +64,10 @@ body:
     id: steps
     attributes:
       label: How to reproduce
-      description: The prompt you gave Claude, or the exact command you ran.
+      description: The prompt you gave Codex, or the exact command you ran.
       placeholder: |
-        /anatomy explain how a token bucket rate limiter works, interactive
-        node examples/raptor-engine/build.mjs --audit
+        $anatomy explain how a token bucket rate limiter works, interactive
+        node dist/examples/raptor-engine/build.js --audit
     validations:
       required: true
   - type: textarea
@@ -80,8 +80,8 @@ body:
     id: environment
     attributes:
       label: Environment
-      description: Node.js version, operating system, Chrome version, Claude Code version.
-      placeholder: output of `node --version` and `claude --version`, your OS, your Chrome version
+      description: Node.js version, operating system, Chrome version, Codex version.
+      placeholder: output of `node --version` and `codex --version`, your OS, your Chrome version
     validations:
       required: true
   - type: textarea

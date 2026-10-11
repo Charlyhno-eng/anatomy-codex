@@ -1,7 +1,7 @@
 import * as React from "react";
-import { Dots, FaceText, Line, Solid } from "../../kit/react/draw";
-import { BASE_ART, BOTTLE_ART, DECK_ART, LABEL, TRAY_ART } from "./geometry";
-import { LiquidLive } from "./live";
+import { Dots, FaceText, Line, Solid } from "../../kit/react/draw.js";
+import { BASE_ART, BOTTLE_ART, DECK_ART, LABEL, TRAY_ART } from "./geometry.js";
+import { LiquidLive } from "./live.js";
 
 function Lit({ id, children }: { id: string; children: React.ReactNode }) {
   return (

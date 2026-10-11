@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { IsoFigure } from "../../kit/react/draw";
-import { asksForStillness, useReadout } from "../../kit/react/live";
-import { keyOf, rowsOf, type GlassShape, type RowShape } from "./drops";
-import { fanOf, type FanPose } from "./fan";
-import { HEIGHT, MERGE, MERGE_LEAST, MERGE_MOST, MERGE_STEP, ROWS, WIDTH, mergeAtX, readoutOf, roundMerge, spokenOf } from "./rig";
+import { IsoFigure } from "../../kit/react/draw.js";
+import { asksForStillness, useReadout } from "../../kit/react/live.js";
+import { keyOf, rowsOf, type GlassShape, type RowShape } from "./drops.js";
+import { fanOf, type FanPose } from "./fan.js";
+import { HEIGHT, MERGE, MERGE_LEAST, MERGE_MOST, MERGE_STEP, ROWS, WIDTH, mergeAtX, readoutOf, roundMerge, spokenOf } from "./rig.js";
 
 const FOLLOW = 150;
 const GLIDE = 560;

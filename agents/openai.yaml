@@ -1,0 +1,6 @@
+interface:
+  display_name: "Anatomy"
+  short_description: "Interactive isometric explainers in TypeScript"
+  default_prompt: "Use $anatomy to explain a technical idea as an interactive physical mechanism in TypeScript."
+policy:
+  allow_implicit_invocation: true

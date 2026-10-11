@@ -1,6 +1,6 @@
-import { Plate } from "../../kit/react/draw";
-import { LiquidArt } from "./art";
-import { GAPS, MERGE, RADII, bladesOutOf, joinedListOf, readoutOf } from "./rig";
+import { Plate } from "../../kit/react/draw.js";
+import { LiquidArt } from "./art.js";
+import { GAPS, MERGE, RADII, bladesOutOf, joinedListOf, readoutOf } from "./rig.js";
 import "./spot-plate.css";
 
 const [LARGE, SMALL] = RADII;

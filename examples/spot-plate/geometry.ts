@@ -1,4 +1,4 @@
-import { circleRing, extrude, insetPlan, onTop, pathOf, type Plan, type Plane, planOutline, type Point3, ringOf, type SolidPaths, topMatrix } from "../../kit/iso-kit";
+import { circleRing, extrude, insetPlan, onTop, pathOf, type Plan, type Plane, planOutline, type Point3, ringOf, type SolidPaths, topMatrix } from "../../kit/iso-kit.js";
 import {
   BASE,
   BASE_H,
@@ -29,7 +29,7 @@ import {
   rowX,
   rowY,
   ROW_RIM,
-} from "./rig";
+} from "./rig.js";
 
 const RADIANS = Math.PI / 180;
 const VIEW_ANGLE = Math.atan2(VIEW[1], VIEW[0]);
