@@ -1,8 +1,4 @@
-BANNER
-
 # Anatomy for Codex
-
----
 
 Anatomy turns technical ideas into interactive illustrations.
 It helps developers and writers explain how a system works.
@@ -19,8 +15,6 @@ The fork is maintained by [Charlyhno-eng](https://github.com/Charlyhno-eng).
 ## See Anatomy for Codex in action
 
 ![An interactive rocket engine illustration](.github/assets/raptor-engine-firing.webp)
-
----
 
 ## Quickstart
 
